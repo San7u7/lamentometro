@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+<title>Lamentometro — Fantavacanza</title>
+<meta name="description" content="Il Lamentometro: la Fantavacanza del vostro gruppo di amici." />
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏖️</text></svg>" />
+<style>
+  html, body { margin: 0; padding: 0; background: #6EC9EE; }
+  #root { min-height: 100dvh; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<!-- React (produzione, via CDN) -->
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+
+<!-- App compilata (JSX già trasformato in JS puro) -->
+<script src="app.bundle.js"></script>
+
+<script>
+  const root = ReactDOM.createRoot(document.getElementById("root"));
+  root.render(React.createElement(window.LamentometroBeach));
+</script>
+</body>
+</html>
