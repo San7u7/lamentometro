@@ -671,7 +671,8 @@
         ))
       )
     ) : null;
-    return h(React.Fragment, null, classificaPanel, headerPanel, dayPanels, lightbox);
+    const lightboxPortal = lightbox ? ReactDOM.createPortal(lightbox, document.body) : null;
+    return h(React.Fragment, null, classificaPanel, headerPanel, dayPanels, lightboxPortal);
   }
   function LamentometroBeach() {
     var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j, _k, _l, _m, _n, _o;
