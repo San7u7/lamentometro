@@ -25,6 +25,52 @@
     if (!res.ok) throw new Error("Scrittura fallita: " + res.status);
     return res.json();
   }
+  var GH_RAW_BASE = "https://raw.githubusercontent.com/San7u7/lamentometro/main/";
+  function ridimensionaImmagine(file, maxW = 1600, quality = 0.75) {
+    return new Promise((resolve, reject) => {
+      const url = URL.createObjectURL(file);
+      const img = new Image();
+      img.onload = () => {
+        let w = img.width, h = img.height;
+        if (w > maxW) {
+          h = Math.round(h * (maxW / w));
+          w = maxW;
+        }
+        const canvas = document.createElement("canvas");
+        canvas.width = w;
+        canvas.height = h;
+        canvas.getContext("2d").drawImage(img, 0, 0, w, h);
+        URL.revokeObjectURL(url);
+        canvas.toBlob((blob) => {
+          if (!blob) return reject(new Error("Conversione immagine fallita"));
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result.split(",")[1]);
+          reader.onerror = reject;
+          reader.readAsDataURL(blob);
+        }, "image/jpeg", quality);
+      };
+      img.onerror = reject;
+      img.src = url;
+    });
+  }
+  async function ghCaricaFoto(day, filename, base64Content) {
+    const res = await fetch(`${PROXY_URL}/photo`, {
+      method: "POST",
+      headers: proxyHeaders,
+      body: JSON.stringify({ day, filename, content: base64Content })
+    });
+    if (!res.ok) throw new Error("Upload foto fallito: " + res.status);
+    return res.json();
+  }
+  async function ghEliminaFoto(path) {
+    const res = await fetch(`${PROXY_URL}/photo`, {
+      method: "DELETE",
+      headers: proxyHeaders,
+      body: JSON.stringify({ path })
+    });
+    if (!res.ok) throw new Error("Eliminazione foto fallita: " + res.status);
+    return res.json();
+  }
   function localGet(key) {
     try {
       return localStorage.getItem(key);
@@ -354,7 +400,8 @@
       salvataggiUsati: {},
       schedine: {},
       risultatiSchedina: {},
-      vacanza: { start: Date.now() }
+      vacanza: { start: Date.now() },
+      foto: []
     };
   }
   async function loadState() {
@@ -428,6 +475,189 @@
     const idx = LIVELLI.indexOf(livello);
     const frac = Math.min(punti24h / 40, 1);
     return /* @__PURE__ */ React.createElement("div", { className: "meter" }, /* @__PURE__ */ React.createElement("div", { className: "meter-head" }, /* @__PURE__ */ React.createElement("span", { className: "meter-label" }, livello.label), /* @__PURE__ */ React.createElement("span", { className: "meter-val" }, punti24h, " pt / 24h")), /* @__PURE__ */ React.createElement("div", { className: "meter-track" }, /* @__PURE__ */ React.createElement("div", { className: "meter-fill", style: { width: `${Math.max(frac * 100, 4)}%`, background: idx >= 3 ? "var(--corallo)" : idx >= 2 ? "var(--sole)" : "var(--verde)" } })));
+  }
+  function formattaGiorno(d) {
+    const dt = new Date(d + "T12:00:00");
+    return dt.toLocaleDateString("it-IT", { weekday: "long", day: "numeric", month: "long" });
+  }
+  function mediaStelle(foto) {
+    const voti = Object.values(foto.voti || {});
+    if (voti.length === 0) return 0;
+    return voti.reduce((a, v) => a + v, 0) / voti.length;
+  }
+  function Stelle({ value, onRate, size = 20 }) {
+    return /* @__PURE__ */ React.createElement(
+      "div",
+      { className: "chip-row", style: { gap: 2 } },
+      [1, 2, 3, 4, 5].map((n) => /* @__PURE__ */ React.createElement(
+        "span",
+        {
+          key: n,
+          onClick: onRate ? () => onRate(n) : void 0,
+          style: { fontSize: size, cursor: onRate ? "pointer" : "default", lineHeight: 1 }
+        },
+        n <= Math.round(value) ? "\u2B50" : "\u2606"
+      ))
+    );
+  }
+  function AlbumView({ state, mioIdValido, friendById, mutate, showToast }) {
+    const [open, setOpen] = useState(null);
+    const [uploading, setUploading] = useState(false);
+    const foto = state.foto || [];
+    const giorni = [...new Set(foto.map((f) => f.day))].sort();
+    const flat = [...foto].sort((a, b) => a.ts - b.ts);
+    const handleFile = async (e) => {
+      const file = e.target.files && e.target.files[0];
+      e.target.value = "";
+      if (!file) return;
+      if (!mioIdValido) {
+        showToast("\u{1F464} Scegli prima chi sei nella Schedina");
+        return;
+      }
+      setUploading(true);
+      try {
+        const base64 = await ridimensionaImmagine(file);
+        const day = oggi();
+        const filename = `${uid()}.jpg`;
+        const { path } = await ghCaricaFoto(day, filename, base64);
+        await mutate((s) => {
+          s.foto = s.foto || [];
+          s.foto.push({ id: uid(), day, path, uploaderId: mioIdValido, ts: Date.now(), voti: {} });
+          return s;
+        });
+        showToast("\u{1F4F8} Foto aggiunta!");
+      } catch (err) {
+        showToast("\u26A0\uFE0F Caricamento fallito, riprova");
+      } finally {
+        setUploading(false);
+      }
+    };
+    const votaFoto = (fotoId, stelle) => {
+      if (!mioIdValido) {
+        showToast("\u{1F464} Scegli prima chi sei nella Schedina");
+        return;
+      }
+      mutate((s) => {
+        const f = (s.foto || []).find((x) => x.id === fotoId);
+        if (f) {
+          f.voti = f.voti || {};
+          f.voti[mioIdValido] = stelle;
+        }
+        return s;
+      });
+    };
+    const eliminaFotoLocale = async (fo) => {
+      setOpen(null);
+      await mutate((s) => {
+        s.foto = (s.foto || []).filter((f) => f.id !== fo.id);
+        return s;
+      });
+      ghEliminaFoto(fo.path).catch(() => {
+      });
+    };
+    const corrente = open != null ? flat[open] : null;
+    const MEDAGLIE = ["\u{1F947}", "\u{1F948}", "\u{1F949}"];
+    const topFoto = [...foto].filter((f) => Object.keys(f.voti || {}).length > 0).sort((a, b) => mediaStelle(b) - mediaStelle(a)).slice(0, 3);
+    const h = React.createElement;
+    const headerPanel = h(
+      Panel,
+      { title: "\u{1F4F8} ALBUM VACANZA" },
+      h(
+        "label",
+        { className: "candy candy-coral menu-btn", style: { display: "block", textAlign: "center" } },
+        uploading ? "\u23F3 Caricamento..." : "\u{1F4F7} Aggiungi foto",
+        h("input", {
+          type: "file",
+          accept: "image/*",
+          capture: "environment",
+          style: { display: "none" },
+          disabled: uploading,
+          onChange: handleFile
+        })
+      ),
+      foto.length === 0 ? h("p", { className: "txt-c", style: { marginTop: 12 } }, "Nessuna foto ancora. Scatta il primo ricordo! \u{1F3D6}\uFE0F") : null
+    );
+    const dayPanels = giorni.map((day) => {
+      const fotoGiorno = foto.filter((f) => f.day === day);
+      const grid = h(
+        "div",
+        { style: { display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 6 } },
+        fotoGiorno.map((f) => {
+          const badge = mediaStelle(f) > 0 ? h(
+            "span",
+            { key: "b", style: { position: "absolute", bottom: 4, right: 4, background: "rgba(0,0,0,0.55)", color: "#fff", fontSize: 11, borderRadius: 8, padding: "1px 6px" } },
+            "\u2B50 " + mediaStelle(f).toFixed(1)
+          ) : null;
+          return h(
+            "div",
+            { key: f.id, onClick: () => setOpen(flat.findIndex((x) => x.id === f.id)), style: { position: "relative", cursor: "pointer" } },
+            h("img", {
+              src: GH_RAW_BASE + f.path,
+              loading: "lazy",
+              style: { width: "100%", aspectRatio: "1", objectFit: "cover", borderRadius: 10, display: "block" }
+            }),
+            badge
+          );
+        })
+      );
+      return h(Panel, { key: day, title: formattaGiorno(day) }, grid);
+    });
+    let lightbox = null;
+    if (corrente) {
+      const stelleRow = h(
+        "div",
+        { className: "chip-row", style: { justifyContent: "center", marginBottom: 10 } },
+        h(Stelle, { value: (corrente.voti || {})[mioIdValido] || 0, onRate: (n) => votaFoto(corrente.id, n) })
+      );
+      const navRow = h(
+        "div",
+        { className: "chip-row", style: { justifyContent: "center" } },
+        h("button", { className: "chip", disabled: open === 0, onClick: () => setOpen(open - 1) }, "\u2190"),
+        h("button", { className: "chip", disabled: open === flat.length - 1, onClick: () => setOpen(open + 1) }, "\u2192"),
+        mioIdValido === corrente.uploaderId ? h("button", { className: "chip chip-red", onClick: () => eliminaFotoLocale(corrente) }, "\u{1F5D1}\uFE0F Elimina") : null,
+        h("button", { className: "chip", onClick: () => setOpen(null) }, "Chiudi")
+      );
+      lightbox = h(
+        "div",
+        { className: "overlay", onClick: () => setOpen(null) },
+        h(
+          "div",
+          { className: "sheet", onClick: (e) => e.stopPropagation() },
+          h("div", { className: "sheet-handle" }),
+          h("img", {
+            src: GH_RAW_BASE + corrente.path,
+            style: { width: "100%", borderRadius: 12, display: "block", marginBottom: 10 }
+          }),
+          h("p", { className: "txt-c", style: { marginBottom: 4 } }, (friendById(corrente.uploaderId) || {}).name || "??", " \xB7 ", formattaGiorno(corrente.day)),
+          stelleRow,
+          navRow
+        )
+      );
+    }
+    const classificaPanel = topFoto.length > 0 ? h(
+      Panel,
+      { title: "\u{1F3C6} TOP 3 FOTO" },
+      h(
+        "div",
+        { style: { display: "flex", gap: 10, justifyContent: "center" } },
+        topFoto.map((f, i) => h(
+          "div",
+          {
+            key: f.id,
+            onClick: () => setOpen(flat.findIndex((x) => x.id === f.id)),
+            style: { textAlign: "center", cursor: "pointer", flex: "1 1 0", maxWidth: 110 }
+          },
+          h("div", { style: { fontSize: 20 } }, MEDAGLIE[i]),
+          h("img", {
+            src: GH_RAW_BASE + f.path,
+            loading: "lazy",
+            style: { width: "100%", aspectRatio: "1", objectFit: "cover", borderRadius: 10, display: "block", marginBottom: 4 }
+          }),
+          h("div", { className: "txt-c", style: { fontSize: 12 } }, "\u2B50 " + mediaStelle(f).toFixed(1))
+        ))
+      )
+    ) : null;
+    return h(React.Fragment, null, classificaPanel, headerPanel, dayPanels, lightbox);
   }
   function LamentometroBeach() {
     var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j, _k, _l, _m, _n, _o;
@@ -961,6 +1191,7 @@
     const NAV = [
       ["home", "\u{1F3E0}", "Home"],
       ["gioca", "\u{1F3AE}", "Gioca", pendenti.length],
+      ["album", "\u{1F4F8}", "Album"],
       ["classifica", "\u{1F3C6}", "Classifica"],
       ["altro", "\u{1F9F3}", "Altro"]
     ];
@@ -1176,7 +1407,7 @@
       const annullato = l.status === "annullato" || l.status === "salvato";
       const speciale = l.catId === "gratitudine" ? "\u{1F305}" : l.catId === "bastian" ? "\u{1F0CF}" : null;
       return /* @__PURE__ */ React.createElement("div", { key: l.id, className: "list-row" + (annullato ? " row-done" : "") }, /* @__PURE__ */ React.createElement("span", { className: "row-emoji" }, speciale || ((_a2 = infoLamento(l)) == null ? void 0 : _a2.emoji)), /* @__PURE__ */ React.createElement("span", { className: "row-text" }, /* @__PURE__ */ React.createElement("strong", null, ((_b2 = friendById(l.targetId)) == null ? void 0 : _b2.name) || "??"), speciale === "\u{1F305}" ? " \xB7 gratitudine" : speciale === "\u{1F0CF}" ? " \xB7 Bastian" : ` \xB7 ${(_c2 = infoLamento(l)) == null ? void 0 : _c2.label}`, l.byId !== l.targetId && !speciale && /* @__PURE__ */ React.createElement(React.Fragment, null, " (da ", (_d2 = friendById(l.byId)) == null ? void 0 : _d2.name, ")"), l.flags.includes("auto") && " \xB7 \xBD", l.flags.includes("conducente") && " \xB7 \u{1F697}", l.flags.includes("scudo") && " \xB7 \u{1F6E1}\uFE0F", l.flags.includes("respinta") && " \xB7 \u{1F44E} respinta dal gruppo", l.status === "pending" && " \xB7 \u2696\uFE0F in voto", l.status === "salvato" && ` \xB7 \u{1F9B8} ${l.motivo}`), /* @__PURE__ */ React.createElement("span", { className: "row-pts" + (puntiValidi(l) < 0 ? " pts-green" : "") }, l.status === "pending" ? "?" : (puntiValidi(l) > 0 ? "+" : "") + puntiValidi(l)), l.status === "pending" && /* @__PURE__ */ React.createElement("button", { className: "chip", onClick: () => setTab("contest") }, "\u2696\uFE0F"));
-    }))), tab === "gruppo" && /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement(Panel, { title: editingId ? "\u270F\uFE0F MODIFICA AVATAR" : "\u{1F3A8} CREA IL TUO AVATAR" }, /* @__PURE__ */ React.createElement("div", { className: "av-preview" }, /* @__PURE__ */ React.createElement(Avatar, { av: editAv, size: 84 })), /* @__PURE__ */ React.createElement(
+    }))), tab === "album" && /* @__PURE__ */ React.createElement(AlbumView, { state, mioIdValido, friendById, mutate, showToast }), tab === "gruppo" && /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement(Panel, { title: editingId ? "\u270F\uFE0F MODIFICA AVATAR" : "\u{1F3A8} CREA IL TUO AVATAR" }, /* @__PURE__ */ React.createElement("div", { className: "av-preview" }, /* @__PURE__ */ React.createElement(Avatar, { av: editAv, size: 84 })), /* @__PURE__ */ React.createElement(
       "input",
       {
         className: "field",
