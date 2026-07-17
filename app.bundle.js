@@ -1,3 +1,4 @@
+
 (() => {
   // app.jsx
   var { useState, useEffect, useRef } = React;
@@ -458,14 +459,73 @@
     if (s.friends.length < 3) return null;
     return s.friends[hashStr(day + s.bastian.seed) % s.friends.length];
   }
+  var VACANZA_START = new Date(2026, 7, 9).getTime();
+  var VACANZA_END = new Date(2026, 7, 13).getTime();
+  function oraCorrente() {
+    if (typeof window !== "undefined" && window.__demoHour != null) return window.__demoHour;
+    return (/* @__PURE__ */ new Date()).getHours();
+  }
+  function scenaPerOra(h) {
+    let sky1, sky2, sky3, sea1, sea2, sunColor, sunGlow, night = false;
+    let t, x, y;
+    if (h >= 6 && h < 20) {
+      t = (h - 6) / 14;
+      x = 12 + t * 76;
+      y = 30 - Math.sin(t * Math.PI) * 22;
+    } else {
+      const hn = h >= 20 ? h - 20 : h + 4;
+      t = hn / 10;
+      x = 12 + t * 76;
+      y = 26 - Math.sin(t * Math.PI) * 16;
+    }
+    if (h >= 6 && h < 9) {
+      sky1 = "#FFC9A3"; sky2 = "#FFDDD0"; sky3 = "#FFF2DC";
+      sea1 = "#F09A7A"; sea2 = "#C96A8E";
+      sunColor = "#FFB25E"; sunGlow = "rgba(255,150,80,.55)";
+    } else if (h >= 9 && h < 17) {
+      sky1 = "#A8DFF5"; sky2 = "#DDF3FC"; sky3 = "#FFF6E4";
+      sea1 = "#4FC3E8"; sea2 = "#2694CB";
+      sunColor = "#FFD75E"; sunGlow = "rgba(255,205,90,.55)";
+    } else if (h >= 17 && h < 20) {
+      sky1 = "#FF9E7A"; sky2 = "#FF8FA8"; sky3 = "#C9A3E8";
+      sea1 = "#E8768F"; sea2 = "#8F5BA8";
+      sunColor = "#FF8C42"; sunGlow = "rgba(255,120,60,.6)";
+    } else {
+      sky1 = "#39406E"; sky2 = "#575E96"; sky3 = "#8B7FC4";
+      sea1 = "#3D4A8C"; sea2 = "#28336B";
+      sunColor = "#F4EFD8"; sunGlow = "rgba(244,239,216,.4)";
+      night = true;
+    }
+    return { sky1, sky2, sky3, sea1, sea2, sunColor, sunGlow, night, sunX: x, sunY: y };
+  }
+  var STELLE = Array.from({ length: 24 }, (_, i) => ({
+    left: hashStr("sx" + i) % 100,
+    top: hashStr("sy" + i) % 100,
+    delay: hashStr("sd" + i) % 30 / 10,
+    scale: 0.6 + hashStr("ss" + i) % 10 / 10
+  }));
   function BeachBackground({ dark }) {
-    return /* @__PURE__ */ React.createElement("div", { className: "bg-scene" + (dark ? " bg-dark" : ""), "aria-hidden": "true" }, /* @__PURE__ */ React.createElement("svg", { viewBox: "0 0 400 900", preserveAspectRatio: "xMidYMax slice", style: { width: "100%", height: "100%", display: "block" } }, /* @__PURE__ */ React.createElement("defs", null, /* @__PURE__ */ React.createElement("linearGradient", { id: "sky", x1: "0", y1: "0", x2: "0", y2: "1" }, /* @__PURE__ */ React.createElement("stop", { offset: "0", stopColor: dark ? "#12264F" : "#6EC9EE" }), /* @__PURE__ */ React.createElement("stop", { offset: "0.55", stopColor: dark ? "#1C3A6B" : "#AEE6F5" }), /* @__PURE__ */ React.createElement("stop", { offset: "1", stopColor: dark ? "#2A4A80" : "#FFF0CE" })), /* @__PURE__ */ React.createElement("linearGradient", { id: "sea", x1: "0", y1: "0", x2: "0", y2: "1" }, /* @__PURE__ */ React.createElement("stop", { offset: "0", stopColor: dark ? "#0E3057" : "#2FB6D9" }), /* @__PURE__ */ React.createElement("stop", { offset: "1", stopColor: dark ? "#0A2444" : "#0E86B2" })), /* @__PURE__ */ React.createElement("linearGradient", { id: "sand", x1: "0", y1: "0", x2: "0", y2: "1" }, /* @__PURE__ */ React.createElement("stop", { offset: "0", stopColor: dark ? "#3A3560" : "#FBE7B2" }), /* @__PURE__ */ React.createElement("stop", { offset: "1", stopColor: dark ? "#2C2950" : "#EFC988" }))), /* @__PURE__ */ React.createElement("rect", { width: "400", height: "560", fill: "url(#sky)" }), !dark && /* @__PURE__ */ React.createElement("circle", { cx: "320", cy: "120", r: "42", fill: "#FFE9A8", opacity: "0.95" }), !dark && /* @__PURE__ */ React.createElement("circle", { cx: "320", cy: "120", r: "58", fill: "#FFE9A8", opacity: "0.28" }), dark && [[40, 60], [90, 140], [160, 50], [230, 110], [300, 70], [350, 160], [60, 220], [200, 190], [330, 240]].map(([x, y], i) => /* @__PURE__ */ React.createElement("circle", { key: i, cx: x, cy: y, r: i % 3 === 0 ? 2.4 : 1.5, fill: "#FFF6D8", opacity: "0.9", className: "star", style: { animationDelay: `${i * 0.7}s` } })), /* @__PURE__ */ React.createElement("ellipse", { cx: "70", cy: "150", rx: "55", ry: "16", fill: "#fff", opacity: dark ? 0.06 : 0.6 }), /* @__PURE__ */ React.createElement("ellipse", { cx: "120", cy: "165", rx: "40", ry: "12", fill: "#fff", opacity: dark ? 0.05 : 0.5 }), /* @__PURE__ */ React.createElement("path", { d: "M0 430 Q 90 380 200 420 T 400 415 V 560 H 0 Z", fill: dark ? "#16305C" : "#57C4E5", opacity: "0.55" }), /* @__PURE__ */ React.createElement("rect", { y: "440", width: "400", height: "180", fill: "url(#sea)" }), /* @__PURE__ */ React.createElement("path", { d: "M0 452 Q 50 446 100 452 T 200 452 T 300 452 T 400 452", stroke: "#fff", strokeWidth: "3", fill: "none", opacity: dark ? 0.15 : 0.55 }), /* @__PURE__ */ React.createElement("path", { d: "M0 492 Q 60 486 120 492 T 240 492 T 360 492 T 400 490", stroke: "#fff", strokeWidth: "2.5", fill: "none", opacity: dark ? 0.1 : 0.4 }), !dark && /* @__PURE__ */ React.createElement("g", { opacity: "0.9" }, /* @__PURE__ */ React.createElement("path", { d: "M60 470 L96 470 L88 482 L68 482 Z", fill: "#FF6F61" }), /* @__PURE__ */ React.createElement("path", { d: "M78 470 L78 442 L94 466 Z", fill: "#fff" })), /* @__PURE__ */ React.createElement("path", { d: "M0 590 Q 120 555 260 585 T 400 575 V 900 H 0 Z", fill: "url(#sand)" }), /* @__PURE__ */ React.createElement("g", { transform: "translate(300 560)" }, /* @__PURE__ */ React.createElement("line", { x1: "0", y1: "0", x2: "0", y2: "95", stroke: dark ? "#1E1B3A" : "#B0653A", strokeWidth: "6", strokeLinecap: "round" }), /* @__PURE__ */ React.createElement(
-      "path",
-      {
-        d: "M-62 6 Q 0 -52 62 6 Q 41 -8 20 4 Q 10 -12 0 4 Q -10 -12 -20 4 Q -41 -8 -62 6 Z",
-        fill: dark ? "#4A3F7A" : "#FF6F61"
-      }
-    ), /* @__PURE__ */ React.createElement("path", { d: "M-21 3 Q -10 -13 0 3 Q 10 -13 21 3 Q 10 -6 0 2 Q -10 -6 -21 3 Z", fill: dark ? "#5D549B" : "#FFF3D6" })), /* @__PURE__ */ React.createElement("path", { d: "M-10 900 Q 30 760 12 700 Q 60 750 55 830 Q 95 740 80 690 Q 120 760 105 900 Z", fill: dark ? "#141230" : "#1D6E63", opacity: "0.85" }), /* @__PURE__ */ React.createElement("path", { d: "M410 900 Q 370 780 388 720 Q 345 770 350 850 Q 315 760 330 705 Q 290 780 300 900 Z", fill: dark ? "#141230" : "#1D6E63", opacity: "0.85" }), !dark && /* @__PURE__ */ React.createElement("text", { x: "180", y: "720", fontSize: "26" }, "\u{1F980}")));
+    const sc = scenaPerOra(dark ? 23 : oraCorrente());
+    const st = {
+      "--sky1": sc.sky1, "--sky2": sc.sky2, "--sky3": sc.sky3,
+      "--sea1": sc.sea1, "--sea2": sc.sea2,
+      "--sun-color": sc.sunColor, "--sun-glow": sc.sunGlow,
+      "--sun-x": sc.sunX + "%", "--sun-y": sc.sunY + "%"
+    };
+    const wave1 = "M0 13 Q 44 0 88 13 T 176 13 T 264 13 T 352 13 T 440 13 T 528 13 T 616 13 T 704 13 T 792 13 T 880 13 T 968 13 T 1056 13 T 1144 13 T 1232 13 T 1320 13 T 1408 13 V 26 H 0 Z";
+    return /* @__PURE__ */ React.createElement("div", { className: "bg-scene" + (sc.night ? " bg-night" : ""), style: st, "aria-hidden": "true" }, /* @__PURE__ */ React.createElement("div", { className: "sky" }), sc.night && /* @__PURE__ */ React.createElement("div", { className: "stars" }, STELLE.map((s, i) => /* @__PURE__ */ React.createElement("i", { key: i, style: { left: s.left + "%", top: s.top + "%", animationDelay: s.delay + "s", transform: `scale(${s.scale})` } }))), /* @__PURE__ */ React.createElement("div", { className: "sun" }), /* @__PURE__ */ React.createElement("span", { className: "cloud cloud-1" }, "\u2601\uFE0F"), /* @__PURE__ */ React.createElement("span", { className: "cloud cloud-2" }, "\u2601\uFE0F"), /* @__PURE__ */ React.createElement("svg", { className: "gull", width: "30", height: "14", viewBox: "0 0 30 14" }, /* @__PURE__ */ React.createElement("path", { d: "M1 10 Q 8 1 15 8 Q 22 1 29 10", stroke: "currentColor", strokeWidth: "2.4", fill: "none", strokeLinecap: "round" })), /* @__PURE__ */ React.createElement("div", { className: "sand" }), /* @__PURE__ */ React.createElement("span", { className: "crab crab-1" }, "\u{1F980}"), /* @__PURE__ */ React.createElement("span", { className: "crab crab-2" }, "\u{1F980}"), /* @__PURE__ */ React.createElement("div", { className: "sea" }, /* @__PURE__ */ React.createElement("svg", { className: "wave wave-1", viewBox: "0 0 1400 26", preserveAspectRatio: "none" }, /* @__PURE__ */ React.createElement("path", { d: wave1, fill: "#ffffff" })), /* @__PURE__ */ React.createElement("svg", { className: "wave wave-2", viewBox: "0 0 1400 26", preserveAspectRatio: "none" }, /* @__PURE__ */ React.createElement("path", { d: wave1, fill: "#ffffff" })), /* @__PURE__ */ React.createElement("span", { className: "fish fish-1" }, "\u{1F420}"), /* @__PURE__ */ React.createElement("span", { className: "fish fish-2" }, "\u{1F41F}"), /* @__PURE__ */ React.createElement("span", { className: "fish fish-3" }, "\u{1F421}")), /* @__PURE__ */ React.createElement("div", { className: "awn" }));
+  }
+  function CountdownVacanza({ now }) {
+    if (now >= VACANZA_START && now < VACANZA_END) return null;
+    if (now >= VACANZA_END) {
+      return /* @__PURE__ */ React.createElement("div", { className: "cv cv-fine" }, /* @__PURE__ */ React.createElement("span", { className: "cv-kicker" }, "\u{1F3C1} La vacanza \xE8 finita"), /* @__PURE__ */ React.createElement("div", { className: "cv-dates" }, "9 \u2192 12 agosto \xB7 guarda le classifiche e le foto \u{1F3C6}"));
+    }
+    const diff = VACANZA_START - now;
+    const gg = Math.floor(diff / 864e5);
+    const hh = Math.floor(diff % 864e5 / 36e5);
+    const mm = Math.floor(diff % 36e5 / 6e4);
+    const pad = (n) => String(n).padStart(2, "0");
+    return /* @__PURE__ */ React.createElement("div", { className: "cv" }, /* @__PURE__ */ React.createElement("span", { className: "cv-kicker" }, "\u{1F3DD}\uFE0F Si parte tra\u2026"), /* @__PURE__ */ React.createElement("div", { className: "cd" }, /* @__PURE__ */ React.createElement("div", { className: "cd-block" }, /* @__PURE__ */ React.createElement("div", { className: "cd-num" }, gg), /* @__PURE__ */ React.createElement("div", { className: "cd-lab" }, "giorni")), /* @__PURE__ */ React.createElement("div", { className: "cd-block" }, /* @__PURE__ */ React.createElement("div", { className: "cd-num" }, pad(hh)), /* @__PURE__ */ React.createElement("div", { className: "cd-lab" }, "ore")), /* @__PURE__ */ React.createElement("div", { className: "cd-block" }, /* @__PURE__ */ React.createElement("div", { className: "cd-num" }, pad(mm)), /* @__PURE__ */ React.createElement("div", { className: "cd-lab" }, "min"))), /* @__PURE__ */ React.createElement("div", { className: "cv-dates-wrap" }, /* @__PURE__ */ React.createElement("span", { className: "cv-dates" }, "9 \u2192 12 agosto \xB7 4 giorni di lamentele")));
   }
   function Panel({ title, children, style }) {
     return /* @__PURE__ */ React.createElement("div", { className: "panel", style }, title && /* @__PURE__ */ React.createElement("div", { className: "panel-tab" }, title), /* @__PURE__ */ React.createElement("div", { className: "panel-body" }, children));
@@ -511,7 +571,7 @@
       e.target.value = "";
       if (!file) return;
       if (!mioIdValido) {
-        showToast("\u{1F464} Scegli prima chi sei nella Schedina");
+        showToast("\u{1F464} Vai su \u{1F3AF} Schedina e tocca il tuo nome");
         return;
       }
       setUploading(true);
@@ -534,7 +594,7 @@
     };
     const votaFoto = (fotoId, stelle) => {
       if (!mioIdValido) {
-        showToast("\u{1F464} Scegli prima chi sei nella Schedina");
+        showToast("\u{1F464} Vai su \u{1F3AF} Schedina e tocca il tuo nome");
         return;
       }
       mutate((s) => {
@@ -685,6 +745,7 @@
     const [custTesto, setCustTesto] = useState("");
     const [custPunti, setCustPunti] = useState(1);
     const [mioId, setMioIdState] = useState(null);
+    const [chiSeiSaltato, setChiSeiSaltato] = useState(false);
     const [, setTick] = useState(0);
     const [sheet, setSheet] = useState(null);
     const [toast, setToast] = useState(null);
@@ -1173,10 +1234,15 @@
         });
         showToast("\u2705 Avatar aggiornato");
       } else {
+        const id = uid();
         mutate((s) => {
-          s.friends.push({ id: uid(), name, emoji: av.f, avatar: av });
+          s.friends.push({ id, name, emoji: av.f, avatar: av });
           return s;
         });
+        if (!mioIdValido) {
+          impostaMioId(id);
+          setChiSeiSaltato(false);
+        }
         showToast(`\u{1F389} ${name} \xE8 nel gioco!`);
       }
       setNewName("");
@@ -1217,7 +1283,7 @@
       const pool = FRASI[fraseBase.fascia].filter((t) => t !== frase.testo);
       setFraseCustom({ fascia: fraseBase.fascia, testo: pool[Math.floor(Math.random() * pool.length)] });
     };
-    return /* @__PURE__ */ React.createElement("div", { className: "app" }, /* @__PURE__ */ React.createElement("style", null, CSS), /* @__PURE__ */ React.createElement(BeachBackground, { dark: darkMode }), /* @__PURE__ */ React.createElement("div", { className: "topbar" }, /* @__PURE__ */ React.createElement("nav", { className: "topnav" }, /* @__PURE__ */ React.createElement("button", { className: "topnav-btn" + (tab === "home" ? " topnav-on" : ""), onClick: () => setTab("home") }, /* @__PURE__ */ React.createElement("span", { className: "topnav-icon" }, "\u{1F3E0}"), /* @__PURE__ */ React.createElement("span", { className: "topnav-label" }, "Home")), /* @__PURE__ */ React.createElement("button", { className: "topnav-btn" + (syncing ? " topnav-syncing" : ""), onClick: () => sync("manual") }, /* @__PURE__ */ React.createElement("span", { className: "topnav-icon" + (syncing ? " sync-on" : "") }, "\u{1F504}"), /* @__PURE__ */ React.createElement("span", { className: "topnav-label" }, "Aggiorna")), /* @__PURE__ */ React.createElement("button", { className: "topnav-btn" + (tab === "contest" ? " topnav-on" : ""), onClick: () => setTab(pendenti.length > 0 ? "contest" : "home") }, /* @__PURE__ */ React.createElement("span", { className: "topnav-icon" }, "\u{1F4CB}", tasksFatti < tasksTotale && pendenti.length > 0 ? /* @__PURE__ */ React.createElement("span", { className: "topnav-badge" }, pendenti.length) : null), /* @__PURE__ */ React.createElement("span", { className: "topnav-label" }, "Task ", tasksFatti, "/", tasksTotale)))), /* @__PURE__ */ React.createElement("main", { className: "content" }, drammatico && (tab === "home" || tab === "lamento") && /* @__PURE__ */ React.createElement("div", { className: "banner" }, "\u{1F4E2} ", /* @__PURE__ */ React.createElement("strong", null, drammatico.name), " sta trasformando la vacanza in un film drammatico. Offritegli un caff\xE8 \u2615"), tab === "home" && /* @__PURE__ */ React.createElement("div", { className: "home-center" }, /* @__PURE__ */ React.createElement("div", { className: "hero" }, /* @__PURE__ */ React.createElement("div", { className: "hero-icon" }, ICONA_FASCIA[frase.fascia]), /* @__PURE__ */ React.createElement("div", { className: "hero-quote" }, "\xAB", frase.testo, "\xBB"), /* @__PURE__ */ React.createElement("div", { className: "hero-sub" }, SALUTO[frase.fascia], " \xB7 frase lamentosa del giorno"), /* @__PURE__ */ React.createElement("button", { className: "hero-btn", onClick: rigeneraFrase }, "\u{1F3B2} Un'altra frecciatina")), arbitro && /* @__PURE__ */ React.createElement(Panel, { title: "\u2696\uFE0F ARBITRO DEL GIORNO", style: { marginTop: 30 } }, /* @__PURE__ */ React.createElement("div", { className: "arbitro-row" }, /* @__PURE__ */ React.createElement(Avatar, { av: arbitro.avatar, emoji: arbitro.emoji, size: 44 }), /* @__PURE__ */ React.createElement("div", { className: "arbitro-nome" }, arbitro.name)), /* @__PURE__ */ React.createElement("p", { className: "txt-c", style: { marginBottom: 0 } }, "Il suo voto vale doppio \xB7 solo lui inserisce i risultati della schedina")), state.friends.length === 0 ? /* @__PURE__ */ React.createElement(Panel, { title: "BENVENUTI" }, /* @__PURE__ */ React.createElement("div", { className: "empty-box" }, "Per iniziare la Fantavacanza, crea la banda."), /* @__PURE__ */ React.createElement("button", { className: "candy candy-teal", onClick: () => setTab("gruppo") }, "\u2795 Aggiungi la banda")) : /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement(Panel, { title: "\u{1F4CB} ATTIVIT\xC0 DI OGGI" }, /* @__PURE__ */ React.createElement("div", { className: "today-list" }, /* @__PURE__ */ React.createElement("button", { className: "today-item today-item-btn", onClick: () => setTab("schedina") }, /* @__PURE__ */ React.createElement("span", null, "\u{1F3AF} Schedina del giorno"), /* @__PURE__ */ React.createElement("span", { className: "today-badge" + (miaSchedinaFatta ? " done" : "") }, !mioIdValido ? "chi sei? \u2192" : miaSchedinaFatta ? "\u2705 fatta" : "da fare")), /* @__PURE__ */ React.createElement("div", { className: "today-item" }, /* @__PURE__ */ React.createElement("span", null, "\u{1F579}\uFE0F Minigioco 1vs1"), /* @__PURE__ */ React.createElement("span", { className: "today-badge" + (!((_d = (_c = state.minigiochi) == null ? void 0 : _c[day]) == null ? void 0 : _d.coppie.length) || state.minigiochi[day].coppie.every((c) => c.risolta) ? " done" : "") }, ((_e = state.minigiochi) == null ? void 0 : _e[day]) ? `${state.minigiochi[day].coppie.filter((c) => c.risolta).length}/${state.minigiochi[day].coppie.length} risolte` : "in generazione")), /* @__PURE__ */ React.createElement("div", { className: "today-item" }, /* @__PURE__ */ React.createElement("span", null, "\u2696\uFE0F Votazioni lamentele"), /* @__PURE__ */ React.createElement("span", { className: "today-badge" + (pendenti.length === 0 ? " done" : " urgent") }, pendenti.length === 0 ? "\u2705 nessuna" : pendenti.length)), /* @__PURE__ */ React.createElement("div", { className: "today-item" }, /* @__PURE__ */ React.createElement("span", null, "\u{1F319} Penitenza di ieri"), /* @__PURE__ */ React.createElement("span", { className: "today-badge" + (state.penitenzaVoto ? " urgent" : ((_f = state.giornateChiuse) == null ? void 0 : _f[ieri()]) ? " done" : "") }, state.penitenzaVoto ? "\u2696\uFE0F da votare" : ((_g = state.giornateChiuse) == null ? void 0 : _g[ieri()]) ? "\u2705 assegnata" : `\u23F3 ${countdownMezzanotte()}`)))), /* @__PURE__ */ React.createElement(MeterBar, { punti24h }))), tab === "gioca" && /* @__PURE__ */ React.createElement("div", { className: "screen-center" }, /* @__PURE__ */ React.createElement(Panel, { title: "\u{1F3AE} SCEGLI COSA GIOCARE" }, /* @__PURE__ */ React.createElement("div", { className: "gioca-grid" }, /* @__PURE__ */ React.createElement("button", { className: "candy candy-coral menu-btn gioca-card", onClick: () => {
+    return /* @__PURE__ */ React.createElement("div", { className: "app" + (scenaPerOra(oraCorrente()).night ? " night" : "") }, /* @__PURE__ */ React.createElement("style", null, CSS), /* @__PURE__ */ React.createElement(BeachBackground, { dark: darkMode }), /* @__PURE__ */ React.createElement("div", { className: "topbar" }, /* @__PURE__ */ React.createElement("nav", { className: "topnav" }, /* @__PURE__ */ React.createElement("button", { className: "topnav-btn" + (tab === "home" ? " topnav-on" : ""), onClick: () => setTab("home") }, /* @__PURE__ */ React.createElement("span", { className: "topnav-icon" }, "\u{1F3E0}"), /* @__PURE__ */ React.createElement("span", { className: "topnav-label" }, "Home")), /* @__PURE__ */ React.createElement("button", { className: "topnav-btn" + (syncing ? " topnav-syncing" : ""), onClick: () => sync("manual") }, /* @__PURE__ */ React.createElement("span", { className: "topnav-icon" + (syncing ? " sync-on" : "") }, "\u{1F504}"), /* @__PURE__ */ React.createElement("span", { className: "topnav-label" }, "Aggiorna")), /* @__PURE__ */ React.createElement("button", { className: "topnav-btn" + (tab === "contest" ? " topnav-on" : ""), onClick: () => setTab(pendenti.length > 0 ? "contest" : "home") }, /* @__PURE__ */ React.createElement("span", { className: "topnav-icon" }, "\u{1F4CB}", tasksFatti < tasksTotale && pendenti.length > 0 ? /* @__PURE__ */ React.createElement("span", { className: "topnav-badge" }, pendenti.length) : null), /* @__PURE__ */ React.createElement("span", { className: "topnav-label" }, "Task ", tasksFatti, "/", tasksTotale)))), /* @__PURE__ */ React.createElement("main", { className: "content" }, drammatico && (tab === "home" || tab === "lamento") && /* @__PURE__ */ React.createElement("div", { className: "banner" }, "\u{1F4E2} ", /* @__PURE__ */ React.createElement("strong", null, drammatico.name), " sta trasformando la vacanza in un film drammatico. Offritegli un caff\xE8 \u2615"), tab === "home" && /* @__PURE__ */ React.createElement("div", { className: "home-center" }, /* @__PURE__ */ React.createElement(CountdownVacanza, { now }), /* @__PURE__ */ React.createElement("div", { className: "hero" }, /* @__PURE__ */ React.createElement("div", { className: "hero-icon" }, ICONA_FASCIA[frase.fascia]), /* @__PURE__ */ React.createElement("div", { className: "hero-quote" }, "\xAB", frase.testo, "\xBB"), /* @__PURE__ */ React.createElement("div", { className: "hero-sub" }, SALUTO[frase.fascia], " \xB7 frase lamentosa del giorno"), /* @__PURE__ */ React.createElement("button", { className: "hero-btn", onClick: rigeneraFrase }, "\u{1F3B2} Un'altra frecciatina")), arbitro && /* @__PURE__ */ React.createElement(Panel, { title: "\u2696\uFE0F ARBITRO DEL GIORNO", style: { marginTop: 30 } }, /* @__PURE__ */ React.createElement("div", { className: "arbitro-row" }, /* @__PURE__ */ React.createElement(Avatar, { av: arbitro.avatar, emoji: arbitro.emoji, size: 44 }), /* @__PURE__ */ React.createElement("div", { className: "arbitro-nome" }, arbitro.name)), /* @__PURE__ */ React.createElement("p", { className: "txt-c", style: { marginBottom: 0 } }, "Il suo voto vale doppio \xB7 solo lui inserisce i risultati della schedina")), state.friends.length === 0 ? /* @__PURE__ */ React.createElement(Panel, { title: "BENVENUTI" }, /* @__PURE__ */ React.createElement("div", { className: "empty-box" }, "Per iniziare la Fantavacanza, crea la banda."), /* @__PURE__ */ React.createElement("button", { className: "candy candy-teal", onClick: () => setTab("gruppo") }, "\u2795 Aggiungi la banda")) : /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement(Panel, { title: "\u{1F4CB} ATTIVIT\xC0 DI OGGI" }, /* @__PURE__ */ React.createElement("div", { className: "today-list" }, /* @__PURE__ */ React.createElement("button", { className: "today-item today-item-btn", onClick: () => setTab("schedina") }, /* @__PURE__ */ React.createElement("span", null, "\u{1F3AF} Schedina del giorno"), /* @__PURE__ */ React.createElement("span", { className: "today-badge" + (miaSchedinaFatta ? " done" : "") }, !mioIdValido ? "chi sei? \u2192" : miaSchedinaFatta ? "\u2705 fatta" : "da fare")), /* @__PURE__ */ React.createElement("div", { className: "today-item" }, /* @__PURE__ */ React.createElement("span", null, "\u{1F579}\uFE0F Minigioco 1vs1"), /* @__PURE__ */ React.createElement("span", { className: "today-badge" + (!((_d = (_c = state.minigiochi) == null ? void 0 : _c[day]) == null ? void 0 : _d.coppie.length) || state.minigiochi[day].coppie.every((c) => c.risolta) ? " done" : "") }, ((_e = state.minigiochi) == null ? void 0 : _e[day]) ? `${state.minigiochi[day].coppie.filter((c) => c.risolta).length}/${state.minigiochi[day].coppie.length} risolte` : "in generazione")), /* @__PURE__ */ React.createElement("div", { className: "today-item" }, /* @__PURE__ */ React.createElement("span", null, "\u2696\uFE0F Votazioni lamentele"), /* @__PURE__ */ React.createElement("span", { className: "today-badge" + (pendenti.length === 0 ? " done" : " urgent") }, pendenti.length === 0 ? "\u2705 nessuna" : pendenti.length)), /* @__PURE__ */ React.createElement("div", { className: "today-item" }, /* @__PURE__ */ React.createElement("span", null, "\u{1F319} Penitenza di ieri"), /* @__PURE__ */ React.createElement("span", { className: "today-badge" + (state.penitenzaVoto ? " urgent" : ((_f = state.giornateChiuse) == null ? void 0 : _f[ieri()]) ? " done" : "") }, state.penitenzaVoto ? "\u2696\uFE0F da votare" : ((_g = state.giornateChiuse) == null ? void 0 : _g[ieri()]) ? "\u2705 assegnata" : `\u23F3 ${countdownMezzanotte()}`)))), /* @__PURE__ */ React.createElement(MeterBar, { punti24h }))), tab === "gioca" && /* @__PURE__ */ React.createElement("div", { className: "screen-center" }, /* @__PURE__ */ React.createElement(Panel, { title: "\u{1F3AE} SCEGLI COSA GIOCARE" }, /* @__PURE__ */ React.createElement("div", { className: "gioca-grid" }, /* @__PURE__ */ React.createElement("button", { className: "candy candy-coral menu-btn gioca-card", onClick: () => {
       setTab("lamento");
       setLamentoView("segnala");
     } }, "\u{1F624} Lamentometro", pendenti.length > 0 ? ` \xB7 \u2696\uFE0F ${pendenti.length}` : ""), /* @__PURE__ */ React.createElement("button", { className: "candy candy-sun menu-btn gioca-card", onClick: () => setTab("schedina") }, "\u{1F3AF} Schedina del giorno"), /* @__PURE__ */ React.createElement("button", { className: "candy candy-teal menu-btn gioca-card", onClick: () => setTab("minigiochi") }, "\u{1F579}\uFE0F Minigiochi 1vs1"), /* @__PURE__ */ React.createElement("button", { className: "candy candy-navy menu-btn gioca-card", onClick: () => setTab("carnet") }, "\u{1F319} Penitenze", state.penitenzaVoto ? " \xB7 \u2696\uFE0F da votare" : ``)))), isGioca && tab !== "gioca" && /* @__PURE__ */ React.createElement("button", { className: "back", onClick: () => setTab("gioca") }, "\u2190 Indietro"), tab === "schedina" && /* @__PURE__ */ React.createElement("div", { className: "screen-center" }, /* @__PURE__ */ React.createElement(Panel, { title: "\u{1F3AF} SCHEDINA DEL GIORNO" }, /* @__PURE__ */ React.createElement("p", { className: "txt-c" }, "Una schedina al giorno a testa \xB7 scegli da 3 a 15 pronostici. 3 = \xD70,5 senza malus \xB7 4-6 = +1 / \u22120,5 \xB7 7-15 = \xD72 / \u22121."), !schedinaChi && /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("p", { className: "txt-c", style: { marginTop: 10 } }, "Chi sei?"), /* @__PURE__ */ React.createElement("div", { className: "pick-grid" }, state.friends.map((f) => /* @__PURE__ */ React.createElement("button", { key: f.id, className: "pick-btn", onClick: () => {
@@ -1474,23 +1540,29 @@
       registraLamento(sheet.targetId, sheet.byId, null, { testo: custTesto.trim(), punti: custPunti });
       setCustTesto("");
       setCustPunti(1);
-    } }, "Registra lamento personalizzato"), /* @__PURE__ */ React.createElement("div", { className: "note", style: { marginTop: 12 } }, "\u2696\uFE0F La lamentela vale solo se il gruppo la approva a maggioranza. ", (_o = friendById(sheet.targetId)) == null ? void 0 : _o.name, " non vota."))))), /* @__PURE__ */ React.createElement("nav", { className: "bottomnav" }, NAV.map(([id, icon, label, badgeN]) => /* @__PURE__ */ React.createElement("button", { key: id, className: "nav-btn" + (tab === id || id === "altro" && isAltro || id === "gioca" && isGioca ? " nav-on" : ""), onClick: () => setTab(id) }, /* @__PURE__ */ React.createElement("span", { className: "nav-icon" }, icon, badgeN ? /* @__PURE__ */ React.createElement("span", { className: "nav-badge" }, badgeN) : null), /* @__PURE__ */ React.createElement("span", { className: "nav-label" }, label)))), showIntro && /* @__PURE__ */ React.createElement("div", { className: "intro" }, /* @__PURE__ */ React.createElement("button", { className: "intro-skip", onClick: chiudiIntro }, "Salta \u2715"), /* @__PURE__ */ React.createElement("div", { className: "intro-stage", key: introSlide, onClick: () => introSlide < INTRO_SLIDES.length - 1 && setIntroSlide(introSlide + 1) }, /* @__PURE__ */ React.createElement("div", { className: "intro-emoji anim-" + INTRO_SLIDES[introSlide].anim }, INTRO_SLIDES[introSlide].emoji), /* @__PURE__ */ React.createElement("div", { className: "intro-title" }, INTRO_SLIDES[introSlide].title), /* @__PURE__ */ React.createElement("div", { className: "intro-sub" }, INTRO_SLIDES[introSlide].sub)), /* @__PURE__ */ React.createElement("div", { className: "intro-dots" }, INTRO_SLIDES.map((_, i) => /* @__PURE__ */ React.createElement("span", { key: i, className: "dot" + (i === introSlide ? " dot-on" : "") }))), introSlide < INTRO_SLIDES.length - 1 ? /* @__PURE__ */ React.createElement("button", { className: "candy candy-coral intro-btn", onClick: () => setIntroSlide(introSlide + 1) }, "Avanti \u2192") : /* @__PURE__ */ React.createElement("button", { className: "candy candy-green intro-btn", onClick: chiudiIntro }, "\u{1F3AE} GIOCA")), toast && /* @__PURE__ */ React.createElement("div", { className: "toast" }, toast));
+    } }, "Registra lamento personalizzato"), /* @__PURE__ */ React.createElement("div", { className: "note", style: { marginTop: 12 } }, "\u2696\uFE0F La lamentela vale solo se il gruppo la approva a maggioranza. ", (_o = friendById(sheet.targetId)) == null ? void 0 : _o.name, " non vota."))))), /* @__PURE__ */ React.createElement("nav", { className: "bottomnav" }, NAV.map(([id, icon, label, badgeN]) => /* @__PURE__ */ React.createElement("button", { key: id, className: "nav-btn" + (tab === id || id === "altro" && isAltro || id === "gioca" && isGioca ? " nav-on" : ""), onClick: () => setTab(id) }, /* @__PURE__ */ React.createElement("span", { className: "nav-icon" }, icon, badgeN ? /* @__PURE__ */ React.createElement("span", { className: "nav-badge" }, badgeN) : null), /* @__PURE__ */ React.createElement("span", { className: "nav-label" }, label)))), showIntro && /* @__PURE__ */ React.createElement("div", { className: "intro" }, /* @__PURE__ */ React.createElement("button", { className: "intro-skip", onClick: chiudiIntro }, "Salta \u2715"), /* @__PURE__ */ React.createElement("div", { className: "intro-stage", key: introSlide, onClick: () => introSlide < INTRO_SLIDES.length - 1 && setIntroSlide(introSlide + 1) }, /* @__PURE__ */ React.createElement("div", { className: "intro-emoji anim-" + INTRO_SLIDES[introSlide].anim }, INTRO_SLIDES[introSlide].emoji), /* @__PURE__ */ React.createElement("div", { className: "intro-title" }, INTRO_SLIDES[introSlide].title), /* @__PURE__ */ React.createElement("div", { className: "intro-sub" }, INTRO_SLIDES[introSlide].sub)), /* @__PURE__ */ React.createElement("div", { className: "intro-dots" }, INTRO_SLIDES.map((_, i) => /* @__PURE__ */ React.createElement("span", { key: i, className: "dot" + (i === introSlide ? " dot-on" : "") }))), introSlide < INTRO_SLIDES.length - 1 ? /* @__PURE__ */ React.createElement("button", { className: "candy candy-coral intro-btn", onClick: () => setIntroSlide(introSlide + 1) }, "Avanti \u2192") : /* @__PURE__ */ React.createElement("button", { className: "candy candy-green intro-btn", onClick: chiudiIntro }, "\u{1F3AE} GIOCA")), !showIntro && !mioIdValido && state.friends.length > 0 && !chiSeiSaltato && /* @__PURE__ */ React.createElement("div", { className: "intro chisei-gate" }, /* @__PURE__ */ React.createElement("button", { className: "intro-skip", onClick: () => setChiSeiSaltato(true) }, "Salta \u2715"), /* @__PURE__ */ React.createElement("div", { className: "chisei-title" }, "\u{1F44B} Chi sei?"), /* @__PURE__ */ React.createElement("div", { className: "chisei-sub" }, "Tocca il tuo nome: il telefono se lo ricorder\xE0 sempre"), /* @__PURE__ */ React.createElement("div", { className: "pick-grid chisei-grid" }, state.friends.map((f) => /* @__PURE__ */ React.createElement("button", { key: f.id, className: "pick-btn", onClick: () => impostaMioId(f.id) }, /* @__PURE__ */ React.createElement(Avatar, { av: f.avatar, emoji: f.emoji, size: 48 }), /* @__PURE__ */ React.createElement("span", null, f.name))))), toast && /* @__PURE__ */ React.createElement("div", { className: "toast" }, toast));
   }
   var CSS = `
-@import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@500;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Archivo+Black&family=Archivo:wght@500;600;700;800&display=swap');
 :root {
-  --navy: #0E5A7A;
-  --mare: #1FA9C9;
-  --mare-scuro: #0E86B2;
-  --sabbia: #FBE7B2;
-  --corallo: #FF6F61;
-  --corallo-scuro: #D94F42;
-  --verde: #17B8A6;
-  --verde-scuro: #0F8A7C;
-  --sole: #FFC53D;
+  --navy: #3A4070;
+  --mare: #5A62A8;
+  --mare-scuro: #2E3358;
+  --sabbia: #FBE3AE;
+  --corallo: #FF6B84;
+  --corallo-scuro: #E0486A;
+  --verde: #7BC94C;
+  --verde-scuro: #4E8A2E;
+  --sole: #FFC24B;
   --carta: #FFFFFF;
-  --display: 'Baloo 2', system-ui, sans-serif;
-  --body: 'Nunito', system-ui, sans-serif;
+  --ink: #3A4070;
+  --ink-soft: rgba(58,64,112,.6);
+  --viola: #7B72E9;
+  --teal: #35C7B8;
+  --vetro: rgba(255,255,255,.72);
+  --vetro-bordo: rgba(255,255,255,.9);
+  --display: 'Archivo Black', 'Archivo', system-ui, sans-serif;
+  --body: 'Archivo', system-ui, sans-serif;
 }
 * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
 .app {
@@ -2017,6 +2089,10 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px s
 .anim-drop { animation: introdrop .6s cubic-bezier(.25,1.5,.4,1) both; }
 @keyframes introdrop { from { transform: translateY(-90px); opacity: 0; } 65% { transform: translateY(10px); opacity: 1; } to { transform: none; } }
 .intro-dots { display: flex; gap: 7px; margin: 26px 0 14px; }
+.chisei-title { font-family: var(--display); font-weight: 800; font-size: 26px; color: #fff; text-shadow: 0 2px 6px rgba(9,63,86,.4); margin-bottom: 8px; }
+.chisei-sub { font-size: 13.5px; font-weight: 700; color: #fff; opacity: .9; margin-bottom: 20px; text-align: center; max-width: 280px; }
+.chisei-grid { max-width: 340px; }
+.chisei-grid .pick-btn { background: rgba(255,255,255,.92); }
 .dot { width: 8px; height: 8px; border-radius: 999px; background: rgba(255,255,255,.35); transition: all .2s; }
 .dot-on { background: #fff; width: 22px; }
 .intro-btn { max-width: 300px; font-size: 17px; padding: 15px 16px; }
@@ -2080,48 +2156,358 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px s
 }
 .lightbox-counter { font-size: 11px; font-weight: 800; color: #6B93A8; text-align: center; margin-bottom: 2px; }
 
-/* ── Album: viewer a schermo intero (sopra tutto, incluso il footer) ── */
-.foto-lightbox {
-  position: fixed; inset: 0; z-index: 100;
-  background: rgba(8,18,28,.97);
-  display: flex; flex-direction: column;
-  animation: foto-fadein .18s ease;
+/* ================= V4 · BEACH CLUB VIVO (glass, zero nero) ================= */
+
+/* -- scena di sfondo -- */
+.bg-scene { position: fixed; inset: 0; z-index: 0; overflow: hidden; }
+.bg-scene .sky {
+  position: absolute; inset: 0; transition: background 1.2s ease;
+  background: linear-gradient(180deg, var(--sky1,#A8DFF5) 0%, var(--sky2,#DDF3FC) 46%, var(--sky3,#FFF6E4) 74%);
 }
-@keyframes foto-fadein { from { opacity: 0; } to { opacity: 1; } }
-.foto-lightbox-close {
-  position: absolute; top: calc(14px + env(safe-area-inset-top)); right: 14px; z-index: 2;
-  width: 36px; height: 36px; border-radius: 999px; border: none; cursor: pointer;
-  background: rgba(255,255,255,.15); color: #fff; font-size: 15px;
+.bg-scene .stars { position: absolute; inset: 0 0 40% 0; pointer-events: none; }
+.bg-scene .stars i { position: absolute; width: 3px; height: 3px; border-radius: 50%; background: #FFF6D8; animation: twinkle 3s ease-in-out infinite; }
+.bg-scene .sun {
+  position: absolute; width: 58px; height: 58px; border-radius: 50%;
+  background: var(--sun-color,#FFD75E);
+  box-shadow: 0 0 46px 16px var(--sun-glow,rgba(255,205,90,.55));
+  left: var(--sun-x,50%); top: var(--sun-y,14%);
+  transform: translate(-50%,-50%); transition: all 1.2s ease;
 }
-.foto-lightbox-close:active { transform: scale(.92); }
-.foto-lightbox-counter {
-  text-align: center; color: rgba(255,255,255,.75); font-size: 12px; font-weight: 800;
-  padding-top: calc(16px + env(safe-area-inset-top)); padding-bottom: 4px;
+.bg-scene .cloud { position: absolute; font-size: 34px; opacity: .8; filter: saturate(.6); animation: cloudDrift linear infinite; }
+.bg-scene .cloud-1 { top: 74px; animation-duration: 46s; }
+.bg-scene .cloud-2 { top: 160px; font-size: 24px; animation-duration: 64s; animation-delay: -25s; }
+@keyframes cloudDrift { from { transform: translateX(-90px); } to { transform: translateX(110vw); } }
+.bg-scene .gull { position: absolute; top: 100px; color: var(--ink); opacity: .8; animation: gullFly 17s linear infinite; }
+@keyframes gullFly { 0% { left: -50px; top: 110px; } 50% { top: 76px; } 100% { left: 105vw; top: 120px; } }
+.bg-scene .sand {
+  position: absolute; left: 0; right: 0; bottom: 106px; height: 76px;
+  background: linear-gradient(180deg, #FBE3AE, #F2CE8B);
+  clip-path: ellipse(120% 100% at 50% 100%);
 }
-.foto-lightbox-stage {
-  flex: 1; display: flex; align-items: center; justify-content: center;
-  position: relative; padding: 6px 50px; min-height: 0;
+.bg-night .sand { background: linear-gradient(180deg, #A99BC9, #8A7DB0); }
+.bg-scene .crab { position: absolute; bottom: 114px; font-size: 26px; animation: crabWalk 15s ease-in-out infinite; }
+.bg-scene .crab-2 { font-size: 19px; bottom: 130px; animation: crabWalk 22s ease-in-out 5s infinite reverse; }
+@keyframes crabWalk {
+  0% { left: -40px; transform: scaleX(1) translateY(0); }
+  12% { transform: scaleX(1) translateY(-3px); }
+  24% { transform: scaleX(1) translateY(0); }
+  49% { left: calc(100vw + 10px); transform: scaleX(1); }
+  50% { left: calc(100vw + 10px); transform: scaleX(-1); }
+  62% { transform: scaleX(-1) translateY(-3px); }
+  99% { left: -40px; transform: scaleX(-1); }
+  100% { left: -40px; transform: scaleX(1); }
 }
-.foto-lightbox-img { max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 10px; display: block; }
-.foto-lightbox-arrow {
-  position: absolute; top: 50%; transform: translateY(-50%);
-  width: 42px; height: 42px; border-radius: 999px; border: none; cursor: pointer;
-  background: rgba(255,255,255,.15); color: #fff; font-size: 18px;
+.bg-scene .sea {
+  position: absolute; left: 0; right: 0; bottom: 0; height: 128px;
+  background: linear-gradient(180deg, var(--sea1,#4FC3E8) 0%, var(--sea2,#2694CB) 100%);
+  transition: background 1.2s ease;
 }
-.foto-lightbox-arrow:active { transform: translateY(-50%) scale(.9); }
-.foto-lightbox-arrow--left { left: 6px; }
-.foto-lightbox-arrow--right { right: 6px; }
-.foto-lightbox-bar {
-  padding: 12px 18px calc(16px + env(safe-area-inset-bottom));
-  display: flex; flex-direction: column; align-items: center; gap: 8px;
-  background: rgba(255,255,255,.04);
+.bg-scene .wave { position: absolute; left: -700px; width: 1400px; height: 26px; opacity: .55; }
+.bg-scene .wave-1 { top: -13px; animation: waveMove 9s linear infinite; }
+.bg-scene .wave-2 { top: -6px; opacity: .35; animation: waveMove 14s linear infinite reverse; }
+@keyframes waveMove { from { transform: translateX(0); } to { transform: translateX(700px); } }
+.bg-scene .fish { position: absolute; font-size: 22px; animation: swim linear infinite; }
+.bg-scene .fish-1 { bottom: 48px; animation-duration: 12s; }
+.bg-scene .fish-2 { bottom: 22px; font-size: 17px; animation-duration: 17s; animation-delay: 5s; }
+.bg-scene .fish-3 { bottom: 74px; font-size: 15px; animation-duration: 14s; animation-delay: 2.5s; }
+@keyframes swim {
+  0% { left: 105vw; transform: translateY(0); }
+  25% { transform: translateY(-7px); }
+  50% { transform: translateY(0); }
+  75% { transform: translateY(6px); }
+  100% { left: -60px; transform: translateY(0); }
 }
-.foto-lightbox-meta { color: #fff; font-size: 13px; font-weight: 700; }
-.foto-lightbox-delete {
-  border: none; background: rgba(255,111,97,.2); color: #FFB3AA; font-weight: 800;
-  border-radius: 999px; padding: 9px 20px; font-size: 12.5px; cursor: pointer; margin-top: 2px;
+/* tenda smerlata fissa in cima */
+.bg-scene .awn {
+  position: absolute; top: 0; left: 0; right: 0; height: calc(40px + env(safe-area-inset-top)); z-index: 4;
+  background: repeating-linear-gradient(90deg, rgba(255,107,132,.94) 0 35px, rgba(255,251,244,.94) 35px 70px);
 }
-.foto-lightbox-delete:active { transform: scale(.96); }
+.bg-scene .awn::after {
+  content: ""; position: absolute; left: 0; right: 0; bottom: -14px; height: 15px;
+  background:
+    radial-gradient(circle at 17.5px 0, rgba(255,107,132,.94) 13px, transparent 13.5px),
+    radial-gradient(circle at 52.5px 0, rgba(255,251,244,.94) 13px, transparent 13.5px);
+  background-size: 70px 15px;
+  filter: drop-shadow(0 3px 5px rgba(58,64,112,.14));
+}
+
+/* -- animazioni condivise -- */
+@keyframes riseSpring { 0% { opacity: 0; transform: translateY(28px) scale(.92); } 60% { opacity: 1; transform: translateY(-4px) scale(1.015); } 100% { opacity: 1; transform: translateY(0) scale(1); } }
+@keyframes numPop { 0% { opacity: 0; transform: scale(.4) rotate(-6deg); } 65% { transform: scale(1.15) rotate(2deg); } 100% { opacity: 1; transform: scale(1) rotate(0); } }
+@keyframes kickFloat { 0%,100% { transform: translateY(0) rotate(-1.5deg); } 50% { transform: translateY(-6px) rotate(1deg); } }
+@keyframes champDrift { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+.home-center > *, .screen-center > *, .content > .panel, .content > .banner, .content > .back, .content > .subtabs {
+  animation: riseSpring .8s cubic-bezier(.22,1,.36,1) both;
+}
+.home-center > *:nth-child(1), .screen-center > *:nth-child(1) { animation-delay: .04s; }
+.home-center > *:nth-child(2), .screen-center > *:nth-child(2) { animation-delay: .15s; }
+.home-center > *:nth-child(3), .screen-center > *:nth-child(3) { animation-delay: .26s; }
+.home-center > *:nth-child(4), .screen-center > *:nth-child(4) { animation-delay: .37s; }
+.home-center > *:nth-child(5), .screen-center > *:nth-child(5) { animation-delay: .48s; }
+.home-center > *:nth-child(6), .screen-center > *:nth-child(6) { animation-delay: .59s; }
+@media (prefers-reduced-motion: reduce) {
+  .bg-scene .crab, .bg-scene .fish, .bg-scene .cloud, .bg-scene .gull, .bg-scene .wave { animation: none !important; }
+  .home-center > *, .screen-center > *, .content > .panel, .content > .banner, .content > .back, .content > .subtabs { animation: none !important; opacity: 1 !important; }
+  .cv-kicker, .cd-num, .rank-top, .hero-icon { animation: none !important; }
+}
+
+/* -- base -- */
+.app { color: var(--ink); }
+.topbar { padding-top: calc(34px + env(safe-area-inset-top)); }
+.topnav {
+  background: rgba(255,251,244,.6); border: 1.5px solid var(--vetro-bordo); border-radius: 999px; padding: 5px;
+  gap: 2px; backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 8px 24px rgba(58,64,112,.14);
+}
+.topnav-btn { color: var(--ink-soft); font-weight: 700; padding: 7px 13px; }
+.topnav-on { color: var(--ink); background: rgba(255,255,255,.85); }
+.topnav-badge { background: var(--corallo); font-weight: 800; }
+
+/* -- countdown vacanza -- */
+.cv { margin: 4px 0 10px; text-align: center; }
+.cv-kicker {
+  display: inline-block; color: #fff;
+  background: linear-gradient(135deg, rgba(123,114,233,.92), rgba(255,107,132,.88));
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  font-family: var(--body); font-size: 10px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase;
+  padding: 7px 16px; border-radius: 999px;
+  box-shadow: 0 6px 20px rgba(123,114,233,.4);
+  animation: kickFloat 3.2s ease-in-out 1s infinite; margin-bottom: 16px;
+}
+.cd { display: flex; gap: 10px; margin-bottom: 12px; }
+.cd-block {
+  flex: 1; border-radius: 18px; text-align: center; padding: 14px 4px 10px;
+  background: var(--vetro); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+  border: 1.5px solid var(--vetro-bordo);
+  transition: transform .22s cubic-bezier(.34,1.8,.5,1);
+}
+.cd-block:nth-child(1) { box-shadow: 0 10px 26px rgba(255,107,132,.3); }
+.cd-block:nth-child(2) { box-shadow: 0 10px 26px rgba(53,199,184,.3); }
+.cd-block:nth-child(3) { box-shadow: 0 10px 26px rgba(255,194,75,.34); }
+.cd-block:active { transform: scale(.93); }
+.cd-num { font-family: var(--display); font-size: 29px; line-height: 1.05; animation: numPop .7s cubic-bezier(.34,1.8,.5,1) both; }
+.cd-block:nth-child(1) .cd-num { animation-delay: .25s; }
+.cd-block:nth-child(2) .cd-num { animation-delay: .37s; }
+.cd-block:nth-child(3) .cd-num { animation-delay: .49s; }
+.cd-lab { font-size: 8.5px; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; color: var(--ink-soft); margin-top: 3px; }
+.cv-dates {
+  display: inline-block; font-size: 9.5px; font-weight: 800; letter-spacing: .1em;
+  background: rgba(58,64,112,.82); color: #FFFBF2; backdrop-filter: blur(8px);
+  padding: 6px 15px; border-radius: 999px; text-transform: uppercase;
+  box-shadow: 0 6px 18px rgba(58,64,112,.28);
+}
+.cv-fine .cv-kicker { background: linear-gradient(135deg, rgba(255,194,75,.95), rgba(255,140,66,.9)); box-shadow: 0 6px 20px rgba(255,173,51,.4); }
+
+/* -- hero (frase del giorno, testo libero sul cielo) -- */
+.hero { background: none; border: none; border-radius: 0; box-shadow: none; padding: 8px 2px 0; }
+.hero::after { display: none; }
+.hero-icon { font-size: 34px; filter: none; }
+.hero-quote {
+  font-family: var(--display); font-style: normal; font-size: 20px; line-height: 1.24;
+  text-transform: uppercase; letter-spacing: -0.01em; color: var(--ink);
+  text-shadow: 0 1px 0 rgba(255,255,255,.6); margin: 8px 0 8px;
+}
+.hero-sub { color: var(--viola); font-weight: 800; font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase; }
+.hero-btn {
+  background: var(--vetro); border: 1.5px solid var(--vetro-bordo); color: var(--ink);
+  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  border-radius: 999px; font-weight: 800; font-size: 12.5px;
+  box-shadow: 0 6px 18px rgba(58,64,112,.14);
+  transition: transform .22s cubic-bezier(.34,1.8,.5,1);
+}
+.hero-btn:active { transform: scale(.93); background: var(--vetro); }
+
+/* -- pannelli = ticket glass -- */
+.panel {
+  background: var(--vetro); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+  border-radius: 22px; border: 1.5px solid var(--vetro-bordo);
+  box-shadow: 0 16px 40px rgba(58,64,112,.16);
+  margin-top: 18px; padding: 0; overflow: hidden;
+}
+.panel-tab {
+  position: static; transform: none; margin: 0; display: block;
+  background: linear-gradient(135deg, rgba(123,114,233,.9), rgba(58,64,112,.88));
+  border: none; box-shadow: none; border-radius: 0;
+  padding: 12px 18px; font-family: var(--display); font-weight: 400;
+  font-size: 11px; letter-spacing: .16em; color: #FFFBF2; text-align: left; text-transform: uppercase;
+}
+.panel-body { padding: 12px 18px 18px; box-shadow: none; background: transparent; text-align: left; border-radius: 0; }
+
+/* -- bottoni candy -- */
+.candy {
+  border-radius: 16px; box-shadow: 0 8px 22px rgba(58,64,112,.18); text-shadow: none;
+  font-family: var(--body); font-weight: 800; font-size: 13.5px; letter-spacing: .02em;
+  transition: transform .22s cubic-bezier(.34,1.8,.5,1), opacity .15s;
+}
+.candy:active { transform: scale(.95); opacity: .9; }
+.candy-coral { background: linear-gradient(135deg, #FF6B84, #F04E6E); color: #fff; box-shadow: 0 8px 22px rgba(255,107,132,.38); }
+.candy-sun { background: linear-gradient(135deg, #FFC24B, #FFAD33); color: #6B4A0D; box-shadow: 0 8px 22px rgba(255,194,75,.4); }
+.candy-teal { background: linear-gradient(135deg, #35C7B8, #1D9E8F); color: #fff; box-shadow: 0 8px 22px rgba(53,199,184,.35); }
+.candy-navy { background: var(--vetro); color: var(--ink); border: 1.5px solid var(--vetro-bordo); backdrop-filter: blur(10px); box-shadow: 0 6px 18px rgba(58,64,112,.14); }
+.candy-green { background: linear-gradient(135deg, #A8E063, #7BC94C); color: #2E4A17; box-shadow: 0 8px 22px rgba(168,224,99,.4); }
+.gioca-card { border-radius: 18px; font-size: 13px; }
+
+/* -- chips -- */
+.chip {
+  background: var(--vetro); border: 1.5px solid var(--vetro-bordo); border-radius: 999px;
+  color: var(--ink); font-weight: 700; backdrop-filter: blur(8px);
+  box-shadow: 0 4px 12px rgba(58,64,112,.1);
+  transition: transform .18s cubic-bezier(.34,1.8,.5,1);
+}
+.chip:active { transform: scale(.92); }
+.chip-on { background: linear-gradient(135deg, #7B72E9, #5A62A8); color: #fff; border-color: transparent; }
+.chip-red { background: rgba(255,107,132,.16); color: var(--corallo-scuro); border-color: rgba(255,107,132,.3); }
+
+/* -- righe attività (ticket) -- */
+.today-item {
+  background: transparent; border-radius: 0; border: none;
+  border-bottom: 1.5px dashed rgba(58,64,112,.16);
+  padding: 13px 2px; font-weight: 700; font-size: 13px;
+  transition: background .2s;
+}
+.today-list .today-item:last-child { border-bottom: none; }
+.today-item:has(.today-badge.done) { background: transparent; }
+.today-item:has(.today-badge.urgent) { background: transparent; }
+.today-item:active { background: rgba(123,114,233,.08); }
+.today-badge { background: rgba(58,64,112,.1); color: var(--ink-soft); font-weight: 800; }
+.today-badge.done { background: linear-gradient(135deg, #A8E063, #7BC94C); color: #2E4A17; box-shadow: 0 4px 12px rgba(168,224,99,.4); }
+.today-badge.urgent { background: linear-gradient(135deg, #FF6B84, #F04E6E); color: #fff; box-shadow: 0 4px 12px rgba(255,107,132,.4); }
+.today-soon { background: rgba(58,64,112,.1); color: var(--ink-soft); }
+
+/* -- classifica -- */
+.rank-row {
+  background: rgba(255,255,255,.55); border: 1.5px solid var(--vetro-bordo); border-radius: 16px; padding: 12px 14px;
+  backdrop-filter: blur(8px);
+  transition: transform .22s cubic-bezier(.34,1.8,.5,1);
+}
+.rank-row:active { transform: scale(.97); }
+.rank-top { background: linear-gradient(135deg, rgba(255,214,110,.95), rgba(255,183,63,.95)); border-color: rgba(255,255,255,.7); box-shadow: 0 12px 30px rgba(255,173,51,.4); animation: champDrift 4s ease-in-out 1.5s infinite; }
+.rank-2 { box-shadow: 0 8px 22px rgba(123,114,233,.24); }
+.rank-3 { box-shadow: 0 8px 22px rgba(53,199,184,.22); }
+.rank-last { background: rgba(255,107,132,.14); border-color: rgba(255,107,132,.28); }
+.rank-pos { font-family: var(--display); font-weight: 400; }
+.rank-name { font-weight: 800; }
+.rank-score { font-family: var(--display); font-weight: 400; font-size: 19px; }
+.score-pos { color: var(--verde-scuro); }
+.score-neg { color: var(--corallo-scuro); }
+.rank-sub { color: var(--ink-soft); }
+
+/* -- footer nav glass -- */
+.bottomnav {
+  background: rgba(255,251,244,.55); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+  border-top: 1.5px solid rgba(255,255,255,.8);
+  box-shadow: 0 -8px 30px rgba(58,64,112,.08);
+}
+.nav-btn {
+  color: var(--ink-soft); border-radius: 14px;
+  transition: transform .22s cubic-bezier(.34,1.8,.5,1), background .2s, color .2s;
+}
+.nav-btn:active { transform: scale(.86); }
+.nav-on { color: #6B4A0D; background: linear-gradient(135deg, #FFC24B, #FFAD33); box-shadow: 0 6px 16px rgba(255,173,51,.4); }
+.nav-on .nav-icon { background: none; }
+.nav-badge { background: var(--corallo); }
+.nav-label { font-weight: 800; }
+
+/* -- campi e sheet -- */
+.field {
+  background: rgba(255,255,255,.8); border: 1.5px solid var(--vetro-bordo); border-radius: 13px;
+  font-weight: 700; color: var(--ink);
+  box-shadow: 0 4px 12px rgba(58,64,112,.08);
+}
+.field::placeholder { color: var(--ink-soft); }
+.field:focus { border-color: var(--viola); outline: none; box-shadow: 0 0 0 3px rgba(123,114,233,.2); }
+.sheet {
+  background: rgba(255,251,244,.9); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+  border-radius: 26px 26px 0 0; border-top: 1.5px solid var(--vetro-bordo);
+  box-shadow: 0 -10px 44px rgba(58,64,112,.24);
+}
+.sheet-handle { background: rgba(58,64,112,.2); }
+.sheet-title { font-family: var(--display); font-weight: 400; font-size: 15px; letter-spacing: .02em; }
+.overlay { background: rgba(46,51,88,.4); backdrop-filter: blur(3px); }
+
+/* -- liste, pick, friend -- */
+.list-row { background: rgba(255,255,255,.6); border: 1.5px solid var(--vetro-bordo); border-radius: 15px; backdrop-filter: blur(8px); }
+.pick-btn {
+  background: rgba(255,255,255,.7); border: 1.5px solid var(--vetro-bordo); border-radius: 16px;
+  box-shadow: 0 6px 16px rgba(58,64,112,.1); font-weight: 700; backdrop-filter: blur(8px);
+  transition: transform .22s cubic-bezier(.34,1.8,.5,1);
+}
+.pick-btn:active { transform: scale(.92); background: rgba(255,255,255,.85); }
+.friend-card {
+  background: rgba(255,255,255,.7); border: 1.5px solid var(--vetro-bordo); border-radius: 18px;
+  box-shadow: 0 8px 22px rgba(58,64,112,.12); font-weight: 700; backdrop-filter: blur(8px);
+  transition: transform .22s cubic-bezier(.34,1.8,.5,1);
+}
+.friend-card:active { transform: scale(.94); }
+
+/* -- album -- */
+.empty-box, .album-empty { border: 2px dashed rgba(58,64,112,.28); color: var(--ink-soft); border-radius: 16px; font-weight: 700; background: rgba(255,255,255,.35); }
+.album-stats { color: var(--ink-soft); font-weight: 700; }
+.album-day-count { background: rgba(58,64,112,.1); color: var(--ink-soft); }
+.foto-thumb { border: 2px solid rgba(255,255,255,.9); border-radius: 14px; box-shadow: 0 8px 22px rgba(58,64,112,.18); }
+.top-foto-img { border: 2px solid rgba(255,255,255,.9); border-radius: 14px; box-shadow: 0 8px 22px rgba(58,64,112,.18); }
+.top-foto-card--first .top-foto-img { box-shadow: 0 0 0 3px var(--sole), 0 10px 26px rgba(255,173,51,.4); }
+.top-foto-score { color: var(--ink); font-family: var(--display); font-weight: 400; font-size: 13px; }
+.foto-star-badge { background: rgba(58,64,112,.78); font-weight: 800; backdrop-filter: blur(4px); }
+.foto-del-btn { background: rgba(58,64,112,.78); backdrop-filter: blur(4px); }
+
+/* -- avvisi & varie -- */
+.banner { background: rgba(255,214,110,.5); color: #6B4A0D; border: 1.5px solid rgba(255,194,75,.55); border-radius: 15px; box-shadow: none; font-weight: 700; backdrop-filter: blur(8px); }
+.note { background: rgba(255,255,255,.5); color: var(--ink-soft); border: 1.5px solid var(--vetro-bordo); border-radius: 13px; font-weight: 700; }
+.toast { background: rgba(58,64,112,.94); box-shadow: 0 10px 32px rgba(58,64,112,.4); font-weight: 800; backdrop-filter: blur(6px); }
+.back { background: none; color: var(--ink-soft); font-weight: 800; }
+.subtab { background: rgba(255,255,255,.6); color: var(--ink-soft); border: 1.5px solid var(--vetro-bordo); border-radius: 999px; font-weight: 700; backdrop-filter: blur(8px); }
+.subtab-on { background: linear-gradient(135deg, #7B72E9, #5A62A8); color: #fff; border-color: transparent; }
+.swipe-title { font-family: var(--display); font-weight: 400; font-size: 15px; letter-spacing: .02em; text-transform: uppercase; }
+.txt, .txt-c { color: var(--ink-soft); font-weight: 600; }
+.txt strong, .txt-c strong { color: var(--ink); }
+.meter { background: rgba(255,255,255,.55); border: 1.5px solid var(--vetro-bordo); border-radius: 999px; }
+.meter-fill { border-radius: 999px; }
+.contest-card { background: rgba(255,255,255,.6); border: 1.5px solid var(--vetro-bordo); border-radius: 16px; box-shadow: 0 6px 18px rgba(58,64,112,.1); backdrop-filter: blur(8px); }
+.action-big { border-radius: 20px; text-shadow: none; }
+.action-sub { text-shadow: none; opacity: .8; }
+.stale-warn { background: rgba(255,214,110,.5); color: #6B4A0D; border: 1.5px solid rgba(255,194,75,.55); border-radius: 13px; }
+.candy-sm { border-radius: 13px; }
+.arbitro-nome { font-family: var(--display); font-weight: 400; font-size: 15px; }
+.loading { color: var(--ink-soft); font-weight: 800; }
+.deck-card { background: rgba(255,255,255,.72); border: 1.5px solid var(--vetro-bordo); border-radius: 18px; backdrop-filter: blur(10px); }
+.deck-top { box-shadow: 0 12px 30px rgba(58,64,112,.2); }
+.dot2 { background: rgba(58,64,112,.22); }
+.dot2-on { background: var(--viola); }
+.deck-hint { color: var(--ink-soft); font-weight: 700; }
+.swatch { border-color: rgba(58,64,112,.18); }
+.swatch-on { border-color: var(--viola); }
+.divider { background: rgba(58,64,112,.14); }
+.av-preview { filter: none; }
+
+/* -- intro & gate chi-sei -- */
+.intro { background: linear-gradient(180deg, #A8DFF5 0%, #DDF3FC 46%, #FFF6E4 100%); }
+.intro-title { font-family: var(--display); color: var(--ink); text-shadow: 0 1px 0 rgba(255,255,255,.6); font-weight: 400; text-transform: uppercase; letter-spacing: -0.01em; }
+.intro-sub { color: var(--ink-soft); text-shadow: none; font-weight: 600; }
+.intro-skip { background: var(--vetro); color: var(--ink); box-shadow: 0 6px 18px rgba(58,64,112,.14); border: 1.5px solid var(--vetro-bordo); backdrop-filter: blur(10px); }
+.intro-emoji { filter: none; }
+.dot { background: rgba(58,64,112,.22); }
+.dot-on { background: var(--viola); }
+.chisei-title { font-family: var(--display); color: var(--ink); text-shadow: 0 1px 0 rgba(255,255,255,.6); font-weight: 400; text-transform: uppercase; }
+.chisei-sub { color: var(--ink-soft); }
+.chisei-grid .pick-btn { background: rgba(255,255,255,.85); }
+
+/* -- notte: testi chiari sugli elementi a contatto col cielo -- */
+.app.night .hero-quote, .app.night .chisei-title, .app.night .intro-title { color: #FFF6E0; text-shadow: 0 1px 10px rgba(20,24,60,.5); }
+.app.night .hero-sub { color: #C9C2FF; }
+.app.night .cd-block { background: rgba(255,255,255,.16); border-color: rgba(255,255,255,.35); }
+.app.night .cd-num, .app.night .cd-lab { color: #FFF6E0; }
+.app.night .hero-btn { background: rgba(255,255,255,.14); border-color: rgba(255,255,255,.3); color: #FFF6E0; }
+.app.night .bottomnav { background: rgba(40,46,88,.5); border-top-color: rgba(255,255,255,.2); }
+.app.night .nav-btn { color: rgba(255,246,224,.6); }
+.app.night .topnav { background: rgba(40,46,88,.5); border-color: rgba(255,255,255,.25); }
+.app.night .topnav-btn { color: rgba(255,246,224,.6); }
+.app.night .topnav-on { color: #FFF6E0; background: rgba(255,255,255,.14); }
+.app.night .intro { background: linear-gradient(180deg, #39406E 0%, #575E96 46%, #8B7FC4 100%); }
+.app.night .intro-sub, .app.night .chisei-sub { color: rgba(255,246,224,.75); }
+.app.night .back { color: rgba(255,246,224,.7); }
+.app.night .txt, .app.night .txt-c { color: var(--ink-soft); }
+
 `;
   window.LamentometroBeach = LamentometroBeach;
 })();
