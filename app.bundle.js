@@ -631,31 +631,24 @@
     });
     let lightbox = null;
     if (corrente) {
-      const stelleRow = h(
-        "div",
-        { className: "chip-row", style: { justifyContent: "center", marginBottom: 10 } },
-        h(Stelle, { value: (corrente.voti || {})[mioIdValido] || 0, onRate: (n) => votaFoto(corrente.id, n), size: 26 })
-      );
-      const navRow = h(
-        "div",
-        { className: "chip-row", style: { justifyContent: "center" } },
-        h("button", { className: "chip", disabled: open === 0, onClick: () => setOpen(open - 1) }, "\u2190"),
-        h("button", { className: "chip", disabled: open === flat.length - 1, onClick: () => setOpen(open + 1) }, "\u2192"),
-        mioIdValido === corrente.uploaderId ? h("button", { className: "chip chip-red", onClick: () => eliminaFotoLocale(corrente) }, "\u{1F5D1}\uFE0F Elimina") : null,
-        h("button", { className: "chip", onClick: () => setOpen(null) }, "Chiudi")
-      );
       lightbox = h(
         "div",
-        { className: "overlay", onClick: () => setOpen(null) },
+        { className: "foto-lightbox" },
+        h("button", { className: "foto-lightbox-close", onClick: () => setOpen(null) }, "\u2715"),
+        h("div", { className: "foto-lightbox-counter" }, `${open + 1} / ${flat.length}`),
         h(
           "div",
-          { className: "sheet", onClick: (e) => e.stopPropagation() },
-          h("div", { className: "sheet-handle" }),
-          h("div", { className: "lightbox-counter" }, `${open + 1} / ${flat.length}`),
-          h("img", { className: "lightbox-img", src: GH_RAW_BASE + corrente.path }),
-          h("p", { className: "txt-c", style: { marginBottom: 4 } }, (friendById(corrente.uploaderId) || {}).name || "??", " \xB7 ", formattaGiorno(corrente.day)),
-          stelleRow,
-          navRow
+          { className: "foto-lightbox-stage" },
+          open > 0 ? h("button", { className: "foto-lightbox-arrow foto-lightbox-arrow--left", onClick: () => setOpen(open - 1) }, "\u2190") : null,
+          h("img", { className: "foto-lightbox-img", src: GH_RAW_BASE + corrente.path }),
+          open < flat.length - 1 ? h("button", { className: "foto-lightbox-arrow foto-lightbox-arrow--right", onClick: () => setOpen(open + 1) }, "\u2192") : null
+        ),
+        h(
+          "div",
+          { className: "foto-lightbox-bar" },
+          h("div", { className: "foto-lightbox-meta" }, (friendById(corrente.uploaderId) || {}).name || "??", " \xB7 ", formattaGiorno(corrente.day)),
+          h(Stelle, { value: (corrente.voti || {})[mioIdValido] || 0, onRate: (n) => votaFoto(corrente.id, n), size: 30 }),
+          mioIdValido === corrente.uploaderId ? h("button", { className: "foto-lightbox-delete", onClick: () => eliminaFotoLocale(corrente) }, "\u{1F5D1}\uFE0F Elimina foto") : null
         )
       );
     }
@@ -2067,6 +2060,49 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px s
   box-shadow: 0 8px 24px rgba(14,90,122,.3);
 }
 .lightbox-counter { font-size: 11px; font-weight: 800; color: #6B93A8; text-align: center; margin-bottom: 2px; }
+
+/* ── Album: viewer a schermo intero (sopra tutto, incluso il footer) ── */
+.foto-lightbox {
+  position: fixed; inset: 0; z-index: 100;
+  background: rgba(8,18,28,.97);
+  display: flex; flex-direction: column;
+  animation: foto-fadein .18s ease;
+}
+@keyframes foto-fadein { from { opacity: 0; } to { opacity: 1; } }
+.foto-lightbox-close {
+  position: absolute; top: calc(14px + env(safe-area-inset-top)); right: 14px; z-index: 2;
+  width: 36px; height: 36px; border-radius: 999px; border: none; cursor: pointer;
+  background: rgba(255,255,255,.15); color: #fff; font-size: 15px;
+}
+.foto-lightbox-close:active { transform: scale(.92); }
+.foto-lightbox-counter {
+  text-align: center; color: rgba(255,255,255,.75); font-size: 12px; font-weight: 800;
+  padding-top: calc(16px + env(safe-area-inset-top)); padding-bottom: 4px;
+}
+.foto-lightbox-stage {
+  flex: 1; display: flex; align-items: center; justify-content: center;
+  position: relative; padding: 6px 50px; min-height: 0;
+}
+.foto-lightbox-img { max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 10px; display: block; }
+.foto-lightbox-arrow {
+  position: absolute; top: 50%; transform: translateY(-50%);
+  width: 42px; height: 42px; border-radius: 999px; border: none; cursor: pointer;
+  background: rgba(255,255,255,.15); color: #fff; font-size: 18px;
+}
+.foto-lightbox-arrow:active { transform: translateY(-50%) scale(.9); }
+.foto-lightbox-arrow--left { left: 6px; }
+.foto-lightbox-arrow--right { right: 6px; }
+.foto-lightbox-bar {
+  padding: 12px 18px calc(16px + env(safe-area-inset-bottom));
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  background: rgba(255,255,255,.04);
+}
+.foto-lightbox-meta { color: #fff; font-size: 13px; font-weight: 700; }
+.foto-lightbox-delete {
+  border: none; background: rgba(255,111,97,.2); color: #FFB3AA; font-weight: 800;
+  border-radius: 999px; padding: 9px 20px; font-size: 12.5px; cursor: pointer; margin-top: 2px;
+}
+.foto-lightbox-delete:active { transform: scale(.96); }
 `;
   window.LamentometroBeach = LamentometroBeach;
 })();
