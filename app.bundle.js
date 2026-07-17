@@ -1,3 +1,4 @@
+
 (() => {
   // app.jsx
   var { useState, useEffect, useRef } = React;
@@ -562,6 +563,11 @@
     const headerPanel = h(
       Panel,
       { title: "\u{1F4F8} ALBUM VACANZA" },
+      foto.length > 0 ? h(
+        "div",
+        { className: "album-stats" },
+        `${foto.length} foto \xB7 ${giorni.length} ${giorni.length === 1 ? "giorno" : "giorni"}`
+      ) : null,
       h(
         "label",
         { className: "candy candy-coral menu-btn", style: { display: "block", textAlign: "center" } },
@@ -575,39 +581,60 @@
           onChange: handleFile
         })
       ),
-      foto.length === 0 ? h("p", { className: "txt-c", style: { marginTop: 12 } }, "Nessuna foto ancora. Scatta il primo ricordo! \u{1F3D6}\uFE0F") : null
+      foto.length === 0 ? h(
+        "div",
+        { className: "album-empty" },
+        "\u{1F3D6}\uFE0F Nessuna foto ancora.",
+        h("br"),
+        "Scatta il primo ricordo della vacanza!"
+      ) : null
     );
     const dayPanels = giorni.map((day) => {
       const fotoGiorno = foto.filter((f) => f.day === day);
+      const titolo = h(
+        React.Fragment,
+        null,
+        formattaGiorno(day),
+        h("span", { className: "album-day-count" }, `${fotoGiorno.length} \u{1F4F8}`)
+      );
       const grid = h(
         "div",
-        { style: { display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 6 } },
+        { className: "foto-grid" },
         fotoGiorno.map((f) => {
           const badge = mediaStelle(f) > 0 ? h(
             "span",
-            { key: "b", style: { position: "absolute", bottom: 4, right: 4, background: "rgba(0,0,0,0.55)", color: "#fff", fontSize: 11, borderRadius: 8, padding: "1px 6px" } },
+            { key: "b", className: "foto-star-badge" },
             "\u2B50 " + mediaStelle(f).toFixed(1)
+          ) : null;
+          const delBtn = f.uploaderId === mioIdValido ? h(
+            "button",
+            {
+              key: "d",
+              className: "foto-del-btn",
+              onClick: (e) => {
+                e.stopPropagation();
+                eliminaFotoLocale(f);
+              }
+            },
+            "\u2715"
           ) : null;
           return h(
             "div",
-            { key: f.id, onClick: () => setOpen(flat.findIndex((x) => x.id === f.id)), style: { position: "relative", cursor: "pointer" } },
-            h("img", {
-              src: GH_RAW_BASE + f.path,
-              loading: "lazy",
-              style: { width: "100%", aspectRatio: "1", objectFit: "cover", borderRadius: 10, display: "block" }
-            }),
-            badge
+            { key: f.id, className: "foto-thumb-wrap", onClick: () => setOpen(flat.findIndex((x) => x.id === f.id)) },
+            h("img", { className: "foto-thumb", src: GH_RAW_BASE + f.path, loading: "lazy" }),
+            badge,
+            delBtn
           );
         })
       );
-      return h(Panel, { key: day, title: formattaGiorno(day) }, grid);
+      return h(Panel, { key: day, title: titolo }, grid);
     });
     let lightbox = null;
     if (corrente) {
       const stelleRow = h(
         "div",
         { className: "chip-row", style: { justifyContent: "center", marginBottom: 10 } },
-        h(Stelle, { value: (corrente.voti || {})[mioIdValido] || 0, onRate: (n) => votaFoto(corrente.id, n) })
+        h(Stelle, { value: (corrente.voti || {})[mioIdValido] || 0, onRate: (n) => votaFoto(corrente.id, n), size: 26 })
       );
       const navRow = h(
         "div",
@@ -624,10 +651,8 @@
           "div",
           { className: "sheet", onClick: (e) => e.stopPropagation() },
           h("div", { className: "sheet-handle" }),
-          h("img", {
-            src: GH_RAW_BASE + corrente.path,
-            style: { width: "100%", borderRadius: 12, display: "block", marginBottom: 10 }
-          }),
+          h("div", { className: "lightbox-counter" }, `${open + 1} / ${flat.length}`),
+          h("img", { className: "lightbox-img", src: GH_RAW_BASE + corrente.path }),
           h("p", { className: "txt-c", style: { marginBottom: 4 } }, (friendById(corrente.uploaderId) || {}).name || "??", " \xB7 ", formattaGiorno(corrente.day)),
           stelleRow,
           navRow
@@ -639,21 +664,17 @@
       { title: "\u{1F3C6} TOP 3 FOTO" },
       h(
         "div",
-        { style: { display: "flex", gap: 10, justifyContent: "center" } },
+        { className: "top-foto-row" },
         topFoto.map((f, i) => h(
           "div",
           {
             key: f.id,
-            onClick: () => setOpen(flat.findIndex((x) => x.id === f.id)),
-            style: { textAlign: "center", cursor: "pointer", flex: "1 1 0", maxWidth: 110 }
+            className: "top-foto-card" + (i === 0 ? " top-foto-card--first" : ""),
+            onClick: () => setOpen(flat.findIndex((x) => x.id === f.id))
           },
-          h("div", { style: { fontSize: 20 } }, MEDAGLIE[i]),
-          h("img", {
-            src: GH_RAW_BASE + f.path,
-            loading: "lazy",
-            style: { width: "100%", aspectRatio: "1", objectFit: "cover", borderRadius: 10, display: "block", marginBottom: 4 }
-          }),
-          h("div", { className: "txt-c", style: { fontSize: 12 } }, "\u2B50 " + mediaStelle(f).toFixed(1))
+          h("div", { className: "top-foto-medal" }, MEDAGLIE[i]),
+          h("img", { className: "top-foto-img", src: GH_RAW_BASE + f.path, loading: "lazy" }),
+          h("div", { className: "top-foto-score" }, "\u2B50 " + mediaStelle(f).toFixed(1))
         ))
       )
     ) : null;
@@ -1996,6 +2017,56 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px s
 
 @media (prefers-reduced-motion: reduce) { *, .star { animation: none !important; transition: none !important; } }
 @media (min-width: 500px) { .friend-grid { grid-template-columns: 1fr 1fr 1fr; } }
+
+/* ── Album foto ── */
+.album-stats { font-family: var(--display); font-size: 13px; color: #6B93A8; text-align: center; margin: -6px 0 14px; }
+.album-empty {
+  text-align: center; padding: 28px 14px; margin-top: 12px;
+  border: 2px dashed #CBE4EF; border-radius: 16px; color: #6B93A8;
+  font-weight: 700; font-size: 13px;
+}
+.album-day-count {
+  display: inline-block; margin-left: 6px; font-size: 11px; font-weight: 800;
+  background: var(--sabbia); color: #8A6A1E; border-radius: 999px; padding: 2px 9px;
+  vertical-align: middle;
+}
+.foto-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.foto-thumb-wrap { position: relative; cursor: pointer; transition: transform .12s ease; }
+.foto-thumb-wrap:active { transform: scale(.95); }
+.foto-thumb {
+  width: 100%; aspect-ratio: 1; object-fit: cover; display: block;
+  border-radius: 12px; box-shadow: 0 3px 0 rgba(14,90,122,.15), 0 6px 14px rgba(14,90,122,.18);
+  border: 2px solid #fff;
+}
+.foto-star-badge {
+  position: absolute; bottom: 5px; right: 5px;
+  background: rgba(14,25,40,.62); color: #fff; font-size: 11px; font-weight: 800;
+  border-radius: 999px; padding: 2px 7px; backdrop-filter: blur(2px);
+}
+.foto-del-btn {
+  position: absolute; top: 5px; right: 5px; border: none; cursor: pointer;
+  background: rgba(14,25,40,.62); color: #fff; border-radius: 999px;
+  width: 24px; height: 24px; font-size: 12px; line-height: 24px; padding: 0;
+  box-shadow: 0 2px 6px rgba(0,0,0,.25);
+}
+.foto-del-btn:active { transform: scale(.9); }
+
+.top-foto-row { display: flex; gap: 10px; justify-content: center; }
+.top-foto-card { text-align: center; cursor: pointer; flex: 1 1 0; max-width: 112px; }
+.top-foto-medal { font-size: 22px; line-height: 1.3; }
+.top-foto-img {
+  width: 100%; aspect-ratio: 1; object-fit: cover; display: block;
+  border-radius: 12px; margin-bottom: 4px; border: 2px solid #fff;
+  box-shadow: 0 3px 0 rgba(14,90,122,.15), 0 6px 14px rgba(14,90,122,.18);
+}
+.top-foto-card--first .top-foto-img { border-color: var(--sole); box-shadow: 0 0 0 3px rgba(255,197,61,.45), 0 6px 14px rgba(14,90,122,.18); }
+.top-foto-score { font-size: 12px; font-weight: 800; color: var(--navy); }
+
+.lightbox-img {
+  width: 100%; border-radius: 14px; display: block; margin-bottom: 10px;
+  box-shadow: 0 8px 24px rgba(14,90,122,.3);
+}
+.lightbox-counter { font-size: 11px; font-weight: 800; color: #6B93A8; text-align: center; margin-bottom: 2px; }
 `;
   window.LamentometroBeach = LamentometroBeach;
 })();
