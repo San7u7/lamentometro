@@ -2,13 +2,9 @@
   // app.jsx
   var { useState, useEffect, useRef } = React;
   var MIO_ID_KEY = "lamentometro:mio-id";
-  var GH_OWNER = "San7u7";
-  var GH_REPO = "lamentometro";
-  var GH_BRANCH = "main";
-  var GH_TOKEN = "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";
-  var GH_PATH = "data/stato.json";
-  var GH_API = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_PATH}`;
-  var ghHeaders = { Authorization: `Bearer ${GH_TOKEN}`, Accept: "application/vnd.github+json" };
+  var PROXY_URL = "https://lamentometro-proxy.giovanni-c4c.workers.dev";
+  var APP_SECRET = "4d6f30c2e1174c3a31005b189d5775d0cef351cd5ab56577";
+  var proxyHeaders = { "X-App-Secret": APP_SECRET, "Content-Type": "application/json" };
   function b64EncodeUtf8(str) {
     return btoa(unescape(encodeURIComponent(str)));
   }
@@ -16,21 +12,17 @@
     return decodeURIComponent(escape(atob(str.replace(/\n/g, ""))));
   }
   async function ghLeggiFile() {
-    const res = await fetch(`${GH_API}?ref=${GH_BRANCH}&_=${Date.now()}`, { headers: ghHeaders, cache: "no-store" });
-    if (res.status === 404) return { content: null, sha: null };
-    if (!res.ok) throw new Error("Lettura GitHub fallita: " + res.status);
+    const res = await fetch(`${PROXY_URL}?_=${Date.now()}`, { headers: proxyHeaders, cache: "no-store" });
+    if (!res.ok) throw new Error("Lettura fallita: " + res.status);
     const data = await res.json();
+    if (!data.content) return { content: null, sha: null };
     return { content: JSON.parse(b64DecodeUtf8(data.content)), sha: data.sha };
   }
   async function ghScriviFile(obj, sha) {
-    const body = {
-      message: "aggiorna stato Lamentometro",
-      content: b64EncodeUtf8(JSON.stringify(obj)),
-      branch: GH_BRANCH
-    };
+    const body = { content: b64EncodeUtf8(JSON.stringify(obj)) };
     if (sha) body.sha = sha;
-    const res = await fetch(GH_API, { method: "PUT", headers: { ...ghHeaders, "Content-Type": "application/json" }, body: JSON.stringify(body) });
-    if (!res.ok) throw new Error("Scrittura GitHub fallita: " + res.status);
+    const res = await fetch(PROXY_URL, { method: "PUT", headers: proxyHeaders, body: JSON.stringify(body) });
+    if (!res.ok) throw new Error("Scrittura fallita: " + res.status);
     return res.json();
   }
   function localGet(key) {
