@@ -2,10 +2,10 @@
   // app.jsx
   var { useState, useEffect, useRef } = React;
   var MIO_ID_KEY = "lamentometro:mio-id";
-  var GH_OWNER = "TUO-USERNAME-GITHUB";
-  var GH_REPO = "TUO-REPOSITORY";
+  var GH_OWNER = "San7u7";
+  var GH_REPO = "lamentometro";
   var GH_BRANCH = "main";
-  var GH_TOKEN = "INCOLLA-QUI-IL-TUO-TOKEN-FINE-GRAINED";
+  var GH_TOKEN = "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";
   var GH_PATH = "data/stato.json";
   var GH_API = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_PATH}`;
   var ghHeaders = { Authorization: `Bearer ${GH_TOKEN}`, Accept: "application/vnd.github+json" };
