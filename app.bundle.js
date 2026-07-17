@@ -5,7 +5,7 @@
   var GH_OWNER = "San7u7";
   var GH_REPO = "lamentometro";
   var GH_BRANCH = "main";
-  var GH_TOKEN = "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";
+  var GH_TOKEN = "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";
   var GH_PATH = "data/stato.json";
   var GH_API = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_PATH}`;
   var ghHeaders = { Authorization: `Bearer ${GH_TOKEN}`, Accept: "application/vnd.github+json" };
